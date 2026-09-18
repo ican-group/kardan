@@ -1,5 +1,5 @@
 
-NoUnfolding.hs:10:10: error:
+NoUnfolding.hs:10:10: error: [PLINTH-00005]
     Plinth Compilation Error:
     Context: Compiling code at NoUnfolding.hs:10:10-45:
              NoUnfoldingHelper.opaque
