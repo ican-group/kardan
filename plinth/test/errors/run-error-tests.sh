@@ -28,7 +28,7 @@ set -uo pipefail
 HERE=$(cd "$(dirname "$0")" && pwd)
 TEST_ROOT=$(cd "$HERE/.." && pwd)
 
-: ${GHC:=$TEST_ROOT/../../_build/stage1/bin/kardan}
+: ${GHC:=$TEST_ROOT/../../ghc/_build/stage1/bin/kardan}
 : ${ACCEPT:=0}
 
 if [ ! -x "$GHC" ]; then

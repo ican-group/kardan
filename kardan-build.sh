@@ -132,9 +132,9 @@ echo " xz:     $XZ"
 
 BASE=$PWD
 
-# check plutus
-if [ ! -d plutus/plutus-tx ]; then
-  echo "plutus submodule not found, please fetch submodules"
+# check the submodules
+if [ ! -d plutus/plutus-tx ] || [ ! -f ghc/configure.ac ]; then
+  echo "ghc or plutus submodule not found, please fetch submodules (git submodule update --init --recursive)"
   exit 1
 fi
 
@@ -142,37 +142,38 @@ fi
 # ~~~~~~~~~~~~~~~~~~~~~~~~~
 # Two unrelated things are spelled RELEASE:
 #  - this script's RELEASE=1 picks the release flavour (docs, more build deps);
-#  - configure's RELEASE=YES/NO decides whether the version in configure.ac gets
+#  - configure's RELEASE=YES/NO decides whether the version in ghc/configure.ac gets
 #    a fourth component appended (the date of the last commit, i.e. a snapshot
 #    version) or is used verbatim.
 # They must not be confused, so the value handed to configure is always passed
 # explicitly below and never inherited from the environment.
 #
-# configure.ac carries the three-component base (9.6.<plinth>) and a plain build
+# ghc/configure.ac (the kardan branch of the GHC fork) carries the
+# three-component base (9.6.<plinth>) and a plain build
 # is stamped 9.6.169.<date>. A release build sets RELEASE_VERSION=9.6.169.1: the
 # base is rewritten to that full version and RELEASE=YES keeps configure from
 # appending anything, so the compiler reports exactly the released version.
 #
 # The release counter lives in the release tag (CI passes RELEASE_VERSION=${TAG#v})
-# rather than in configure.ac, because a committed four-component base would make
+# rather than in ghc/configure.ac, because a committed four-component base would make
 # every later snapshot build five components (9.6.169.1.20260803) -- one more
 # than the tools accept.
 CONFIGURE_RELEASE=NO
 if [ -n "$RELEASE_VERSION" ]; then
-  BASE_VERSION=$(sed -n 's/^AC_INIT(\[[^]]*\], *\[\([^]]*\)\].*/\1/p' configure.ac)
+  BASE_VERSION=$(sed -n 's/^AC_INIT(\[[^]]*\], *\[\([^]]*\)\].*/\1/p' ghc/configure.ac)
   case "$RELEASE_VERSION" in
     # already rewritten by an earlier run of this script: nothing to do
     "$BASE_VERSION") ;;
     "$BASE_VERSION".*)
       echo "stamping release version $RELEASE_VERSION (was $BASE_VERSION)"
       sed "s/^\(AC_INIT(\[[^]]*\], *\[\)$BASE_VERSION\(\]\)/\1$RELEASE_VERSION\2/" \
-        configure.ac > configure.ac.tmp
-      mv configure.ac.tmp configure.ac
-      # configure.ac changed, so ./configure has to be regenerated and re-run
-      rm -f ./configure ./mk/config.h
+        ghc/configure.ac > ghc/configure.ac.tmp
+      mv ghc/configure.ac.tmp ghc/configure.ac
+      # ghc/configure.ac changed, so ./configure has to be regenerated and re-run
+      rm -f ghc/configure ghc/mk/config.h
       ;;
     *)
-      echo "error: RELEASE_VERSION=$RELEASE_VERSION does not extend the version in configure.ac ($BASE_VERSION)"
+      echo "error: RELEASE_VERSION=$RELEASE_VERSION does not extend the version in ghc/configure.ac ($BASE_VERSION)"
       exit 1
       ;;
   esac
@@ -181,12 +182,12 @@ fi
 
 # build boot GHC
 DID_BOOT_OR_CONFIGURE=0
-if [ ! -x ./configure ] || [ "$REBUILD" -eq 1 ]; then
+if [ ! -x ghc/configure ] || [ "$REBUILD" -eq 1 ]; then
   echo "booting..."
-  ./boot
+  (cd ghc && ./boot)
   DID_BOOT_OR_CONFIGURE=1
 fi
-if [ ! -e ./mk/config.h ] || [ "$REBUILD" -eq 1 ]; then
+if [ ! -e ghc/mk/config.h ] || [ "$REBUILD" -eq 1 ]; then
   echo "configuring..."
   (
   # On Windows/MinGW64, ensure we use the CA bundle from MSYS2 to avoid SSL errors when downloading tarballs
@@ -194,50 +195,28 @@ if [ ! -e ./mk/config.h ] || [ "$REBUILD" -eq 1 ]; then
       export SSL_CERT_FILE="$(cygpath -w /mingw64/etc/ssl/certs/ca-bundle.crt)"
   fi
   # RELEASE is configure's own knob, not this script's. See Note [Release versioning].
+  cd ghc
   RELEASE="$CONFIGURE_RELEASE" ./configure $CONFIGURE_ARGS
   )
   DID_BOOT_OR_CONFIGURE=1
 fi
 
-# On Windows, plinth/ghc must be a real symlink to ../ghc
-if [ "$IS_WINDOWS" -eq 1 ] && [ ! -L plinth/ghc ]; then
-    echo "error: plinth/ghc is not a symlink."
-    echo ""
-    # Check Developer Mode via PowerShell (the registry key location varies across Windows versions)
-    DEV_MODE=$(powershell.exe -NoProfile -Command "(Get-WindowsDeveloperLicense).IsValid" 2>/dev/null | tr -d '\r')
-    [ "$DEV_MODE" = "True" ] && DEV_MODE=1 || DEV_MODE=0
-    if [ "$DEV_MODE" != "1" ]; then
-        echo "  Windows Developer Mode is not enabled."
-        echo "  Enable it in: Settings > System > Advanced"
-        echo ""
-    fi
-    SYMLINKS_CFG=$(git config --get core.symlinks 2>/dev/null || echo "false")
-    if [ "$SYMLINKS_CFG" != "true" ]; then
-        echo "  git core.symlinks is not enabled."
-        echo "  Run: git config core.symlinks true"
-        echo ""
-    fi
-    if [ "$DEV_MODE" = "1" ] && [ "$SYMLINKS_CFG" = "true" ]; then
-        echo "  Developer Mode and core.symlinks are both enabled, but plinth/ghc"
-        echo "  is still not a symlink. Try re-checking out the path:"
-        echo "    rm -rf plinth/ghc && git checkout -- plinth/ghc"
-        echo ""
-    fi
-    echo "After fixing, re-run this script."
-    exit 1
-fi
+# hadrian builds in its default build root, ghc/_build: a build root outside
+# the GHC tree does not work (absolute: GHC #27427; relative: the rts does not
+# find its generated headers). The kardan outputs (tools, the cabal build of
+# kardan) stay in _build.
+GHC_BUILD="$BASE/ghc/_build"
 
-if [ ! -x ./_build/stage1/bin/ghc ] || [ "$REBUILD" -eq 1 ]; then
+if [ ! -x "$GHC_BUILD/stage1/bin/ghc" ] || [ "$REBUILD" -eq 1 ]; then
   echo "building..."
-  echo "./hadrian/build -j --flavour=$FLAVOUR $HADRIAN_ARGS binary-dist-dir"
-
-  ./hadrian/build -j --flavour=$FLAVOUR $HADRIAN_ARGS binary-dist-dir
+  echo "(cd ghc && ./hadrian/build -j --flavour=$FLAVOUR $HADRIAN_ARGS binary-dist-dir)"
+  (cd ghc && ./hadrian/build -j --flavour=$FLAVOUR $HADRIAN_ARGS binary-dist-dir)
 fi
 
 # build Kardan
 
 STAGE="stage-plinth"
-BOOT_GHC="$BASE/_build/stage1/bin/ghc"
+BOOT_GHC="$GHC_BUILD/stage1/bin/ghc"
 TARGET_PLATFORM=$("$BOOT_GHC" --print-target-platform)
 VERSION=$("$BOOT_GHC" --numeric-version)
 
@@ -281,19 +260,19 @@ fi
     echo "cabal update..."
     "$CABAL" ${CABAL_PROJECT_ARGS} ${CABAL_ARGS} update
     echo "cabal build..."
-    "$CABAL" ${CABAL_PROJECT_ARGS} ${CABAL_ARGS} build ${CABAL_BUILD_ARGS} ghc:ghc
+    "$CABAL" ${CABAL_PROJECT_ARGS} ${CABAL_ARGS} build ${CABAL_BUILD_ARGS} ghc-bin:exe:ghc
 )
 
 # add kardan to the _build dir and the bindists
-CWRAPPER_DIR="$BASE/hadrian/bindist/cwrappers"
+CWRAPPER_DIR="$BASE/ghc/hadrian/bindist/cwrappers"
 
-DEST_KARDAN="$BASE/_build/stage1/bin/kardan${EXE_EXT}"
+DEST_KARDAN="$GHC_BUILD/stage1/bin/kardan${EXE_EXT}"
 
 (
     cd plinth
     # list-bin may first print the output of a source-repository-package
     # checkout (e.g. git's "HEAD is now at ...") on stdout: keep the last line.
-    SRC_KARDAN=$("$CABAL" ${CABAL_PROJECT_ARGS} ${CABAL_ARGS} list-bin ${CABAL_BUILD_ARGS} ghc:ghc | tail -n 1)
+    SRC_KARDAN=$("$CABAL" ${CABAL_PROJECT_ARGS} ${CABAL_ARGS} list-bin ${CABAL_BUILD_ARGS} ghc-bin:exe:ghc | tail -n 1)
     echo "installing kardan: $SRC_KARDAN => $DEST_KARDAN"
 
     # add to build dir (needed for testing, so always done)
@@ -311,7 +290,7 @@ DEST_KARDAN="$BASE/_build/stage1/bin/kardan${EXE_EXT}"
     # fixup the bindist:
     #  - add kardan with the static Plinth plugin
     #  - remove boot GHC, since we don't want Kardan to replace the user's GHC
-    for dir in "$BASE"/_build/bindist/*; do
+    for dir in "$GHC_BUILD"/bindist/*; do
         if [ -d "$dir" ]; then
             echo "adding kardan to bindist: $dir"
             if [ "$IS_WINDOWS" -eq 1 ]; then
@@ -392,10 +371,10 @@ if [ "$RELEASE" -eq 1 ] || [ "$BINDIST" -eq 1 ]; then
     # bindist keeps it instead of deleting it.
     HADRIAN_BINDIST="ghc-$VERSION-$TARGET_PLATFORM"
     BINDIST_NAME="kardan-$VERSION-$TARGET_PLATFORM${LIBC_SUFFIX}"
-    if [ -d "$BASE/_build/bindist/$HADRIAN_BINDIST" ]; then
-        rm -rf "$BASE/_build/bindist/$BINDIST_NAME"
-        mv "$BASE/_build/bindist/$HADRIAN_BINDIST" "$BASE/_build/bindist/$BINDIST_NAME"
+    if [ -d "$GHC_BUILD/bindist/$HADRIAN_BINDIST" ]; then
+        rm -rf "$GHC_BUILD/bindist/$BINDIST_NAME"
+        mv "$GHC_BUILD/bindist/$HADRIAN_BINDIST" "$GHC_BUILD/bindist/$BINDIST_NAME"
     fi
-    (cd "$BASE/_build/bindist" && "$TAR" -cf - "$BINDIST_NAME" | "$XZ" -T0 > "$BINDIST_NAME.tar.xz")
+    (cd "$GHC_BUILD/bindist" && "$TAR" -cf - "$BINDIST_NAME" | "$XZ" -T0 > "$BINDIST_NAME.tar.xz")
 fi
 

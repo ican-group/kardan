@@ -19,9 +19,9 @@ case "$what" in
         ;;
     ghc)
         echo "Cleaning GHC build..."
-        rm -rf _build/stage0 _build/stage1 _build/bindist
+        rm -rf ghc/_build
         # clean configure artifacts
-        rm -f mk/config.h mk/config.mk config.log config.status
+        rm -f ghc/mk/config.h ghc/mk/config.mk ghc/config.log ghc/config.status
         ;;
     tools)
         echo "Cleaning locally built tools..."
@@ -29,10 +29,10 @@ case "$what" in
         ;;
     all)
         echo "Cleaning all build directories..."
-        rm -rf _build
+        rm -rf _build ghc/_build
         (cd plinth && rm -rf dist-newstyle)
         # clean configure artifacts
-        rm -f mk/config.h mk/config.mk config.log config.status
+        rm -f ghc/mk/config.h ghc/mk/config.mk ghc/config.log ghc/config.status
         ;;
     *)
         echo "Usage: $0 [all|ghc|plinth|tools]"

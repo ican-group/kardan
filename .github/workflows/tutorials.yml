@@ -14,7 +14,7 @@ on:
       - 'examples/**'
       - '.github/workflows/tutorials.yml'
   push:
-    branches: [ghc-9.6-plinth]
+    branches: [master]
     paths:
       - 'examples/**'
       - '.github/workflows/tutorials.yml'

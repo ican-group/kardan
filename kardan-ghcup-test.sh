@@ -14,7 +14,7 @@
 # artifact. Locations are queried from ghcup itself (`whereis`) so it works the
 # same on Linux, macOS and Windows.
 #
-# Prerequisites: a bindist tarball under _build/bindist/ (or set BINDIST_DIR),
+# Prerequisites: a bindist tarball under ghc/_build/bindist/ (or set BINDIST_DIR),
 # python3, and a ghcup >= 0.2.1.0 on PATH (or set GHCUP_BIN).
 #
 # Usage:
@@ -36,7 +36,7 @@ esac
 
 : ${SKIP_CLEANUP:=0}
 : ${EXPECT_MUSL:=0}
-: ${BINDIST_DIR:="$BASE/_build/bindist"}
+: ${BINDIST_DIR:="$BASE/ghc/_build/bindist"}
 : ${GHCUP_BIN:=$(command -v ghcup 2>/dev/null || true)}
 : ${PYTHON:=$(command -v python3 2>/dev/null || true)}
 

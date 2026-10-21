@@ -1,0 +1,8 @@
+[submodule "ghc"]
+	path = ghc
+	url = https://github.com/ican-group/ghc-plinth.git
+	branch = kardan-9.6.7
+[submodule "plutus"]
+	path = plutus
+	url = https://github.com/ican-group/ghc-plinth-plutus.git
+	branch = kardan-1.69

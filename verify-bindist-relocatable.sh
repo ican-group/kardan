@@ -5,7 +5,7 @@ set -euo pipefail
 #   - Can be installed to any --prefix
 #   - Works after the build directory is removed
 #
-# Prerequisites: bindist tarball in _build/bindist/
+# Prerequisites: bindist tarball in ghc/_build/bindist/
 #
 # Environment variables:
 #   PREFIX_A, PREFIX_B  - override install prefixes
@@ -65,9 +65,9 @@ trap cleanup EXIT
 
 find_tarball() {
     local tarballs
-    tarballs=("$REPO_ROOT"/_build/bindist/kardan-*-*.tar.xz)
+    tarballs=("$REPO_ROOT"/ghc/_build/bindist/kardan-*-*.tar.xz)
     if [ ${#tarballs[@]} -eq 0 ] || [ ! -f "${tarballs[0]}" ]; then
-        echo "ERROR: No bindist tarball found in _build/bindist/"
+        echo "ERROR: No bindist tarball found in ghc/_build/bindist/"
         echo "Run kardan-build.sh first."
         exit 1
     fi

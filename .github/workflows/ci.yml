@@ -4,7 +4,7 @@ on:
   pull_request:
     types: [opened, synchronize]
   push:
-    branches: [master, ghc-9.6-plinth]
+    branches: [master]
   # Releases are cut from here: run the workflow with a release_version to build
   # and test that version, and tick `publish` to have the release job tag it and
   # publish it once everything has passed. See Note [ghcup release channel].
@@ -62,12 +62,14 @@ jobs:
         fi
         # The same rule kardan-build.sh applies when stamping the compiler, so a
         # version it would reject never reaches the build. See Note [Release
-        # versioning] there.
-        BASE_VERSION=$(sed -n 's/^AC_INIT(\[[^]]*\], *\[\([^]]*\)\].*/\1/p' configure.ac)
+        # versioning] there. The base version is in the ghc submodule's
+        # configure.ac: fetch only that submodule, not its own submodules.
+        git submodule update --init --depth 1 ghc
+        BASE_VERSION=$(sed -n 's/^AC_INIT(\[[^]]*\], *\[\([^]]*\)\].*/\1/p' ghc/configure.ac)
         case "$VERSION" in
           "$BASE_VERSION"|"$BASE_VERSION".*) ;;
           *)
-            echo "error: $VERSION does not extend the version in configure.ac ($BASE_VERSION)"
+            echo "error: $VERSION does not extend the version in ghc/configure.ac ($BASE_VERSION)"
             exit 1
             ;;
         esac
@@ -114,7 +116,7 @@ jobs:
         # never collide on the artifact name within a single run. See the
         # matching download in the kardan-test job, which shares this matrix.
         name: kardan-bindist-${{ matrix.os }}-${{ matrix.ghc }}
-        path: _build/bindist/*.tar.xz
+        path: ghc/_build/bindist/*.tar.xz
         retention-days: 1
         # the archive is already xz-compressed; don't re-zip it
         compression-level: 0
@@ -236,18 +238,19 @@ jobs:
         submodules: false
 
     # The runner's workspace disk (/) is small; /mnt has ~70 GB. Bind-mount it as
-    # _build so the GHC build has room. docker -v is recursive, so this nested
-    # mount is visible inside the container at /workspace/_build.
+    # _build and ghc/_build so the build has room. docker -v is recursive, so
+    # these nested mounts are visible inside the container under /workspace.
     - name: Build on the large /mnt disk
-      run: |
-        sudo mkdir -p /mnt/_build
-        mkdir -p "$GITHUB_WORKSPACE/_build"
-        sudo mount --bind /mnt/_build "$GITHUB_WORKSPACE/_build"
-        sudo chown "$USER" "$GITHUB_WORKSPACE/_build"
+      run: bash .github/bind-mount.sh _build
 
-    # The static plugin baked into kardan is built from the plutus submodule.
+    # The GHC tree and the static plugin baked into kardan come from the ghc
+    # and plutus submodules.
     - name: Init and update submodules
       run: bash .github/fetch-submodules.sh
+
+    # After the submodule fetch: a non-empty ghc/ would stop the clone.
+    - name: Build GHC on the large /mnt disk
+      run: bash .github/bind-mount.sh ghc/_build
 
     # BINDIST=1 produces the fixed-up kardan bindist (+ .tar.xz). kardan-build.sh
     # appends a -musl suffix to the archive name when run on musl libc.
@@ -267,7 +270,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: kardan-bindist-musl-${{ matrix.os }}-${{ matrix.ghc }}
-        path: _build/bindist/*.tar.xz
+        path: ghc/_build/bindist/*.tar.xz
         retention-days: 1
         # the archive is already xz-compressed; don't re-zip it
         compression-level: 0
@@ -425,7 +428,7 @@ jobs:
         # key by GHC so this never collides with another job's artifact within a
         # run. See the matching download in the kardan-test-windows job.
         name: kardan-bindist-windows-${{ matrix.ghc }}
-        path: _build/bindist/*.tar.xz
+        path: ghc/_build/bindist/*.tar.xz
         retention-days: 1
         # the archive is already xz-compressed; don't re-zip it
         compression-level: 0
@@ -576,7 +579,7 @@ jobs:
         # key by GHC so this never collides with another job's artifact within a
         # run. See the matching download in the kardan-test-macos job.
         name: kardan-bindist-macos-${{ matrix.ghc }}
-        path: _build/bindist/*.tar.xz
+        path: ghc/_build/bindist/*.tar.xz
         retention-days: 1
         # the archive is already xz-compressed; don't re-zip it
         compression-level: 0
@@ -847,7 +850,7 @@ jobs:
   # Kardan is distributed as a custom third-party ghcup tool named `kardan`,
   # installable with a stock ghcup >= 0.2.1.0 (installer DSL). Users then run:
   #   ghcup config add-release-channel \
-  #     https://raw.githubusercontent.com/ican-group/ghc-plinth/ghcup-channel/ghcup-kardan.yaml
+  #     https://raw.githubusercontent.com/ican-group/kardan/ghcup-channel/ghcup-kardan.yaml
   #   ghcup install kardan <version>
   #
   # The channel lives on its own orphan branch, served straight from

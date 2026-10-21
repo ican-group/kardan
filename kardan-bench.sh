@@ -13,7 +13,7 @@
 set -euo pipefail
 
 BASE=$PWD
-KARDAN="$BASE/_build/stage1/bin/kardan"
+KARDAN="$BASE/ghc/_build/stage1/bin/kardan"
 PROJECT_DIR="$BASE/plinth/coop-test"
 BENCH_DIR="$BASE/plutus/plutus-benchmark"
 TARGET_PKG="plutus-benchmark"

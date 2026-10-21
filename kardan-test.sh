@@ -67,7 +67,7 @@ esac
 
 # Default to the in-tree build; override GHC to point at an installed bindist
 # (e.g. the CI test job consumes the bindist produced by `BINDIST=1 kardan-build.sh`).
-: ${GHC:=$PWD/_build/stage1/bin/kardan${EXE_EXT}}
+: ${GHC:=$PWD/ghc/_build/stage1/bin/kardan${EXE_EXT}}
 
 if [ ! -x "$GHC" ]; then
   echo "Kardan not found ($GHC). Please run kardan-build.sh first."

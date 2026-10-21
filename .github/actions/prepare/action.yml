@@ -1,6 +1,6 @@
 name: Prepare Linux build environment
 description: >-
-  Free disk space, bind-mount the large /mnt disk as _build, fetch submodules
+  Free disk space, bind-mount the large /mnt disk as _build and ghc/_build, fetch submodules
   and set up GHC/cabal. Shared by the cabal (build) and kardan-test jobs. The
   repo must already be checked out so the runner can find this local action.
 
@@ -31,22 +31,20 @@ runs:
       docker-images: true
       swap-storage: true
 
-  # The runner's workspace disk (/) has ~21 GB free; the ephemeral disk at
-  # /mnt has ~70 GB. Build everything under _build on /mnt to avoid running
-  # out of space. We bind-mount (rather than symlink) so _build stays a real
-  # directory: a symlinked build root can confuse path tracking in
-  # Hadrian/Cabal.
+  # Build on the large /mnt disk: _build (kardan) and ghc/_build (hadrian).
+  # See .github/bind-mount.sh.
   - name: Build on the large /mnt disk
     shell: bash
-    run: |
-      sudo mkdir -p /mnt/_build
-      mkdir -p "$GITHUB_WORKSPACE/_build"
-      sudo mount --bind /mnt/_build "$GITHUB_WORKSPACE/_build"
-      sudo chown "$USER" "$GITHUB_WORKSPACE/_build"
+    run: bash .github/bind-mount.sh _build
 
   - name: Init and update submodules
     shell: bash
     run: bash .github/fetch-submodules.sh
+
+  # After the submodule fetch: a non-empty ghc/ would stop the clone.
+  - name: Build GHC on the large /mnt disk
+    shell: bash
+    run: bash .github/bind-mount.sh ghc/_build
 
   - uses: haskell-actions/setup@v2
     name: Setup Haskell tools

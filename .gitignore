@@ -1,0 +1,5 @@
+_build/
+dist-newstyle/
+cabal.project.local
+plinth/test/_build/
+plinth/test/examples-output/

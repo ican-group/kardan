@@ -57,7 +57,8 @@ source-repository-package
     tag: 211b95baad422966c9e719ed70cbc189c58eaae5
 
 
-packages: ./ghc
+-- ghc-bin, from the ghc submodule (the kardan branch of the GHC fork).
+packages: ../ghc/ghc
 
 optional-packages:
   ../plutus/plutus-tx-plugin
