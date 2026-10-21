@@ -7,4 +7,4 @@ from or follow as a procedure.
 
 There are no reference pages yet. The build script's prerequisites, options, and
 outputs currently live in
-[Build Plinth from source]({% link how-to/build.md %}).
+[Build Kardan from source]({% link how-to/build.md %}).

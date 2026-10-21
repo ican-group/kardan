@@ -104,11 +104,11 @@ interface file.
 
 You do not need `{-# INLINEABLE #-}` pragmas for this:
 
-- uplc-ghc marks each definition that has no inline pragma of its own as
+- kardan marks each definition that has no inline pragma of its own as
   `INLINEABLE`, so GHC keeps its unfolding.
-- The `base`, `ghc-prim` and `ghc-bignum` libraries that come with uplc-ghc
+- The `base`, `ghc-prim` and `ghc-bignum` libraries that come with kardan
   have the unfoldings of all their definitions.
-- In uplc-ghc, `-O0` does not set `-fomit-interface-pragmas` and
+- In kardan, `-O0` does not set `-fomit-interface-pragmas` and
   `-fignore-interface-pragmas`, which remove unfoldings. Thus you can build
   Plinth code with `-O0`.
 

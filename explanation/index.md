@@ -15,4 +15,4 @@ your understanding rather than get something done.
 - [The Plinth contract language]({% link explanation/plinth-language.md %})
 - [Data representation: from Haskell types to Plutus Core]({% link explanation/data-representation.md %})
 - [Languages for smart contracts]({% link explanation/languages.md %})
-- [The Plinth standalone compiler]({% link explanation/standalone-compiler.md %})
+- [Kardan]({% link explanation/standalone-compiler.md %})

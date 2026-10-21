@@ -43,9 +43,9 @@ lower-level representations:
 
 The result is wrapped in a `CompiledCode` value (the program, plus the PIR kept
 around for debugging). This whole pipeline is the *only* Plinth-specific part of
-the story. Because the plugin is built into `uplc-ghc`, compiling a module that
+the story. Because the plugin is built into `kardan`, compiling a module that
 defines Plinth code yields this UPLC alongside the usual GHC outputs &mdash; see
-[The Plinth standalone compiler]({% link explanation/standalone-compiler.md %}).
+[Kardan]({% link explanation/standalone-compiler.md %}).
 
 ## Serialising the script (generic)
 

@@ -1,28 +1,28 @@
 ---
-title: Use uplc-ghc in a project
+title: Use kardan in a project
 permalink: /how-to/use/
 ---
 
-The recommended way to use the Plinth standalone compiler is to set it once in
+The recommended way to use Kardan is to set it once in
 `cabal.project`. If you [installed it via ghcup]({% link how-to/install.md %})
 (the recommended way), each installed release is on `PATH` as
-`uplc-ghc-<version>`. Name the release in `cabal.project`:
+`kardan-<version>`. Name the release in `cabal.project`:
 
 ```haskell
-with-compiler: uplc-ghc-9.6.169.3
-with-hc-pkg:   uplc-ghc-pkg-9.6.169.3
+with-compiler: kardan-9.6.169.4
+with-hc-pkg:   kardan-pkg-9.6.169.4
 packages: .
 ```
 
 With the version in the name, the project keeps its compiler when you install
-or set a different release. The plain `uplc-ghc` is the release that you set
-with `ghcup set plinth`.
+or set a different release. The plain `kardan` is the release that you set
+with `ghcup set kardan`.
 
 The `with-hc-pkg` line points cabal at the `ghc-pkg` that belongs to
-`uplc-ghc`. ghcup installs it under the name `uplc-ghc-pkg-<version>`, so that
+`kardan`. ghcup installs it under the name `kardan-pkg-<version>`, so that
 it does not collide with your regular GHC. Without this line, cabal looks for a
 `ghc-pkg` next to the compiler. On Linux and macOS this finds the correct one
-through the `uplc-ghc` symlink, but on Windows (where ghcup creates shims, not
+through the `kardan` symlink, but on Windows (where ghcup creates shims, not
 symlinks) cabal picks up the `ghc-pkg.exe` of your regular GHC and fails with a
 version mismatch.
 
@@ -30,7 +30,7 @@ For a compiler built from source, give the path to the binary instead. The
 matching `ghc-pkg` sits next to it, so `with-hc-pkg` is not needed:
 
 ```haskell
-with-compiler: /path/to/uplc-ghc
+with-compiler: /path/to/kardan
 ```
 
 The same file also needs the Cardano package repository (CHaP), which provides
@@ -58,25 +58,25 @@ package sets.
 
 The Plinth libraries themselves (`plutus-tx`, `plutus-core`) are neither
 bundled with the compiler nor taken from CHaP. Pull them from the
-`ghc-plinth-plutus` fork that `uplc-ghc` was built against (`plutus-tx-plugin`
-is not needed: the compiler is built into `uplc-ghc`):
+`ghc-plinth-plutus` fork that `kardan` was built against (`plutus-tx-plugin`
+is not needed: the compiler is built into `kardan`):
 
 ```haskell
 source-repository-package
   type: git
   location: https://github.com/ican-group/ghc-plinth-plutus
-  tag: 71bfaa5b04f2a4e17c13f35ff594782ec8891acf
+  tag: 896a89d6a13bff4a905b9c0f29f9e350e99785a4
   subdir: plutus-tx
           plutus-core
 ```
 
-Use the `ghc-plinth-plutus` commit that matches your `uplc-ghc`: the compiler
+Use the `ghc-plinth-plutus` commit that matches your `kardan`: the compiler
 and these libraries are released together as a matched set, built from the same
-commit. The commit above matches release 9.6.169.3, the release in
+commit. The commit above matches release 9.6.169.4, the release in
 `with-compiler`. To use a different release, change `with-compiler`,
 `with-hc-pkg` and this `tag` together. The commit of a release is the `plutus`
 submodule of its tag (`v<version>`) in
-[ghc-plinth](https://github.com/ican-group/ghc-plinth).
+[kardan](https://github.com/ican-group/kardan).
 
 In addition you may want to add the following `source-repository-package` blocks
 that build the C crypto libraries used by Cardano (`libsodium`, `secp256k1`,
@@ -137,8 +137,8 @@ $ cabal build
 
 The ledger accepts some Plutus Core constructs only from a given major
 protocol version on. For example, a `case` on a `Data` value needs protocol
-version 12. Releases from 9.6.169.3 compile for protocol version 11, the
-version of mainnet, by default. To compile for a different chain, set the
+version 12. Kardan compiles for protocol version 11, the version of mainnet,
+by default. To compile for a different chain, set the
 plugin option `target-protocol-version` in the `ghc-options` of your
 package:
 
@@ -149,5 +149,6 @@ package:
 
 A script that you compile for a higher version than the chain fails when the
 ledger runs it.
-Releases 9.6.169.1 and 9.6.169.2 compile for protocol version 12, so their
-scripts that decode data types fail on mainnet. Use 9.6.169.3 or later.
+The uplc-ghc releases 9.6.169.1 and 9.6.169.2, the predecessors of Kardan,
+compile for protocol version 12, so their scripts that decode data types fail
+on mainnet.

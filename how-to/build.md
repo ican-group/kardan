@@ -1,18 +1,18 @@
 ---
-title: Build Plinth from source
+title: Build Kardan from source
 permalink: /how-to/build/
 ---
-This guide explains how to build `uplc-ghc`, the
-[Plinth standalone compiler]({% link explanation/standalone-compiler.md %}),
+This guide explains how to build
+[Kardan]({% link explanation/standalone-compiler.md %}) (`kardan`)
 from source. Most users do not need this: the recommended way to get
-`uplc-ghc` is to
+`kardan` is to
 [install a released binary via ghcup]({% link how-to/install.md %}). Build
 from source when you work on the compiler itself, or when no binary
 distribution covers your platform.
 
 ## Prerequisites
 
-`plinth-build.sh` expects the following tools on `PATH`:
+`kardan-build.sh` expects the following tools on `PATH`:
 
 | Tool      | Requirement                                          |
 | --------- | ---------------------------------------------------- |
@@ -29,11 +29,16 @@ found, so they are effectively optional. The others must be present.
 
 ## 1. Clone with submodules
 
-The `plutus` submodule provides `plutus-tx`, `plutus-tx-plugin`, and
-`plutus-core`, so clone recursively:
+The compiler sources come from two submodules, so clone recursively:
+
+| Submodule | Repository                     | Branch         | Provides                                                |
+| --------- | ------------------------------ | -------------- | ------------------------------------------------------- |
+| `ghc`     | `ican-group/ghc-plinth`        | `kardan-9.6.7` | GHC 9.6.7 with the Kardan patches                       |
+| `plutus`  | `ican-group/ghc-plinth-plutus` | `kardan-1.69`  | `plutus-tx`, `plutus-tx-plugin` and `plutus-core` 1.69 |
+
 
 ```console
-$ git clone --recurse-submodules git@github.com:ican-group/ghc-plinth.git
+$ git clone --recurse-submodules git@github.com:ican-group/kardan.git
 ```
 
 If you already cloned without `--recurse-submodules`, fetch them with:
@@ -47,20 +52,20 @@ $ git submodule update --init --recursive
 From the root of the repository:
 
 ```console
-$ ./plinth-build.sh
+$ ./kardan-build.sh
 ```
 
-The script bootstraps GHC and then builds `uplc-ghc`. What it produces is
+The script bootstraps GHC in `ghc/` and then builds `kardan`. What it produces is
 described under [Build outputs](#build-outputs) below.
 
 ## Build options
 
-`plinth-build.sh` is controlled by environment variables. The two most common
+`kardan-build.sh` is controlled by environment variables. The two most common
 force a full rebuild or select the release flavour:
 
 ```console
-$ REBUILD=1 ./plinth-build.sh   # re-boot, re-configure, and rebuild from scratch
-$ RELEASE=1 ./plinth-build.sh   # release flavour, which also builds documentation
+$ REBUILD=1 ./kardan-build.sh   # re-boot, re-configure, and rebuild from scratch
+$ RELEASE=1 ./kardan-build.sh   # release flavour, which also builds documentation
 ```
 
 | Variable  | Default | Effect                                                        |
@@ -75,60 +80,60 @@ flavour.
 
 ## Build outputs
 
-When `plinth-build.sh` finishes it has produced two things.
+When `kardan-build.sh` finishes it has produced two things.
 
 **The compiler.** The development build is installed at:
 
 ```
-_build/stage1/bin/uplc-ghc
+ghc/_build/stage1/bin/kardan
 ```
 
 This is the binary you point cabal at (see
-[Use uplc-ghc in a project]({% link how-to/use.md %})).
+[Use kardan in a project]({% link how-to/use.md %})).
 
-**Binary distribution archive.** A relocatable bindist is produced under
-`_build/bindist/`:
+**Binary distribution archive.** With `RELEASE=1` or `BINDIST=1`, a
+relocatable bindist is produced under `ghc/_build/bindist/`:
 
 ```
-_build/bindist/ghc-<version>-<platform>.tar.xz
+ghc/_build/bindist/kardan-<version>-<platform>.tar.xz
 ```
 
-The build script fixes up the bindist so that it ships `uplc-ghc` (with the
+The build script fixes up the bindist so that it ships `kardan` (with the
 built-in Plinth plugin) instead of the boot GHC:
 
-- `uplc-ghc` is added (as `uplc-ghc-<version>` plus an `uplc-ghc` wrapper).
+- `kardan` is added (as `kardan-<version>` plus a `kardan` wrapper).
 - The boot `ghc` binary is removed, so installing the bindist does not replace
   a user's existing GHC.
-- `runghc` and `runhaskell` are renamed to `uplc-runghc` and `uplc-runhaskell`.
+- `runghc` and `runhaskell` are renamed to `kardan-runghc` and `kardan-runhaskell`.
 
-Installing the bindist therefore creates `$PREFIX/bin/uplc-ghc`.
+Installing the bindist therefore creates `$PREFIX/bin/kardan`.
 
 ## Test and benchmark
 
-With `uplc-ghc` built, two scripts exercise it. Both run from the root of the
+With `kardan` built, two scripts exercise it. Both run from the root of the
 repository.
 
 ### Run the example project tests
 
 ```console
-$ ./plinth-test.sh
+$ ./kardan-test.sh
 ```
 
-It builds the example Plinth project under `plinth/test/` with `uplc-ghc` and
+It builds the example Plinth project under `plinth/test/` with `kardan` and
 regenerates its expected outputs. Set `CLEAN=1` to force a clean rebuild:
 
 ```console
-$ CLEAN=1 ./plinth-test.sh
+$ CLEAN=1 ./kardan-test.sh
 ```
 
 ### Run the benchmarks
 
-`plinth-bench.sh` builds and runs the `plutus-benchmark` test-suites with
-`uplc-ghc` and reports any diffs against the golden files committed under
+`kardan-bench.sh` builds and runs the `plutus-benchmark` test-suites with
+`kardan` and reports any diffs against the golden files committed under
 `plutus/plutus-benchmark/` (it requires the `plutus` submodule):
 
 ```console
-$ ./plinth-bench.sh
+$ ./kardan-bench.sh
 ```
 
 Each test-suite is a [tasty](https://hackage.haskell.org/package/tasty) runner.

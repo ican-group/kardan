@@ -1,5 +1,5 @@
-title: Plinth Standalone Compiler
-description: A fork of GHC that compiles Plinth (Plutus Tx) to Plutus Core.
+title: Kardan
+description: A GHC-based compiler that compiles Plinth (Plutus Tx) to Plutus Core.
 
 remote_theme: kitian616/jekyll-TeXt-theme
 

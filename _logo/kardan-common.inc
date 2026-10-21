@@ -1,20 +1,16 @@
 // ---------------------------------------------------------------------------
-// Shared palette, geometry and lighting for the Plinth marks.
+// Shared palette, geometry and lighting for the Kardan marks.
 //
-// Included by plinth-logo.pov (the wordmark) and plinth-icon.pov (the favicon)
-// so the two cannot drift apart. Palette taken from the project site,
-// ican-group.github.io/ghc-plinth.
+// Included by kardan-logo.pov (the wordmark), kardan-anim.pov (the animated
+// wordmark) and kardan-icon.pov (the favicon) so they cannot drift apart. Palette taken from the project site,
+// ican-group.github.io/kardan.
 //
 // Options, set with Declare= on the command line before the include runs:
-//   Motif   1 = the I of the wordmark is a plinth in miniature, 0 = plain I
 //   Theme   0 = coral on near-white, 1 = white on charcoal
 // ---------------------------------------------------------------------------
 
 #version 3.7;
 
-#ifndef (Motif)
-  #declare Motif = 1;
-#end
 #ifndef (Theme)
   #declare Theme = 0;
 #end
@@ -63,7 +59,6 @@ global_settings {
 // which POV-Ray will not accept as a term inside a larger arithmetic
 // expression, so these are written out rather than derived by multiplying.)
 #declare C_CoralLo = Srgb(<0.788, 0.227, 0.243>);   // #c93a3e
-#declare C_WhiteLo = Srgb(<0.760, 0.775, 0.800>);
 
 // Note [Hitting the brand colour]
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -82,8 +77,7 @@ global_settings {
 #if (Theme = 0)
   #declare C_Body   = C_CoralLit;   // the plain letters
   #declare C_BodyLo = C_CoralLo;
-  #declare C_Col    = C_White;      // the plinth, as on the favicon tile
-  #declare C_ColLo  = C_WhiteLo;
+  #declare C_Mark   = C_White;      // the K, as on the favicon tile
   #declare C_Ground = C_Pale;
   #declare C_Far    = Srgb(<0.870, 0.875, 0.885>);
   #declare C_SkyLo  = Srgb(<0.780, 0.790, 0.810>);
@@ -93,8 +87,7 @@ global_settings {
 #else
   #declare C_Body   = C_White;
   #declare C_BodyLo = Srgb(<0.560, 0.575, 0.605>);
-  #declare C_Col    = C_CoralLitDark;
-  #declare C_ColLo  = C_CoralLo;
+  #declare C_Mark   = C_CoralLitDark;
   #declare C_Ground = C_Ink;
   #declare C_Far    = Srgb(<0.180, 0.184, 0.196>);
   #declare C_SkyLo  = Srgb(<0.090, 0.094, 0.106>);
@@ -110,7 +103,7 @@ global_settings {
 #declare Scl      = 2.40;    // em -> scene units
 
 #declare NC    = 6;
-#declare Chars = array[NC] { "P", "L", "I", "N", "T", "H" }
+#declare Chars = array[NC] { "K", "A", "R", "D", "A", "N" }
 #declare Wid   = array[NC];
 
 // Cap height, and the ink width of every glyph, straight from the outlines.
@@ -124,16 +117,27 @@ global_settings {
   #declare i = i + 1;
 #end
 
-#declare ColW = 0.34;                  // the plinth is wider than a plain I
-#if (Motif = 1)
-  #declare Wid[2] = ColW;
-#end
-
 #declare TotW = Trk * (NC - 1);
 #declare i = 0;
 #while (i < NC)
   #declare TotW = TotW + Wid[i];
   #declare i = i + 1;
+#end
+
+// ---------------------------------------------------------------------------
+// Note [Framing by height]
+// ~~~~~~~~~~~~~~~~~~~~~~~~
+// POV-Ray's "angle" is the horizontal field of view, so a wider frame with the
+// same angle shows a smaller word. The camera angles of the wordmark and its
+// animation were tuned for a 1800x700 frame. FrameAngle(A) gives the angle with
+// the same vertical field of view as A on that frame, for the actual frame. So
+// the vertical framing -- and with it the heights measured in kardan-anim.pov --
+// does not depend on the width, and a longer word only needs a wider frame:
+// KARDAN is 4.20 em wide against 3.56 em for the word that the angles were
+// tuned for, hence 2124x700 (1800 * 4.20 / 3.56).
+// ---------------------------------------------------------------------------
+#macro FrameAngle(A)
+  (2 * degrees(atan(tan(radians(A / 2)) * (image_width / image_height) / (1800 / 700))))
 #end
 
 // ---------------------------------------------------------------------------
@@ -168,47 +172,9 @@ global_settings {
   }
 #end
 
-// A rounded block: SX/SZ are half extents, the block spans [Y0,Y1].
-#macro Slab(SX, SZ, Y0, Y1, Round)
-  superellipsoid {
-    <Round, Round>
-    scale <SX, (Y1 - Y0) / 2, SZ>
-    translate y * (Y0 + Y1) / 2
-  }
-#end
-
-// ---------------------------------------------------------------------------
-// The plinth itself: base, shaft, cap, standing on y=0 and centred on x=0,
-// W wide and D deep, always CapH tall so it lines up with the letters.
-//
-// Fine=1 adds the two slim transition mouldings. They read at wordmark size,
-// but on a 16px favicon they turn to mush, so the icon asks for Fine=0 and a
-// chunkier shaft instead -- the proportions of the existing flat mark.
-// ---------------------------------------------------------------------------
-#macro PlinthColumn(W, D, Fine)
-  #local HX  = W / 2;
-  #local HZ  = D / 2;
-  #local Bh  = CapH * (Fine = 1 ? 0.077 : 0.190);   // base slab height
-  #local Ch  = CapH * (Fine = 1 ? 0.070 : 0.165);   // cap slab height
-  #local Sw  = W * (Fine = 1 ? 0.50 : 0.44);        // shaft width
-  #local CapX = HX - (Fine = 1 ? 0.010 : W * 0.055);// cap reads narrower than base
-  #local Trn = CapH * 0.056;                        // transition moulding
-  #local S0  = Bh + (Fine = 1 ? Trn : 0);
-  #local S1  = CapH - Ch - (Fine = 1 ? Trn : 0);
-  union {
-    object { Slab(HX, HZ, 0, Bh, 0.06) }
-    #if (Fine = 1)
-      object { Slab(HX - 0.030, HZ - 0.02, Bh,      S0,        0.16) }
-      object { Slab(HX - 0.040, HZ - 0.02, S1,      CapH - Ch, 0.16) }
-    #end
-    object { Slab(Sw / 2,       HZ - 0.05, S0,      S1,        0.05) }
-    object { Slab(CapX,         HZ,        CapH-Ch, CapH,      0.06) }
-  }
-#end
-
 // --- materials -------------------------------------------------------------
 // One matte ceramic, taking its colour and its deeper shade as arguments, so
-// the letters and the plinth are the same material in two finishes.
+// the letters and the icon mark are the same material in two finishes.
 #macro Ceramic(Top, Base, Gloss)
   texture {
     pigment {
@@ -233,7 +199,6 @@ global_settings {
 #end
 
 #declare T_Letter = Ceramic(C_Body, C_BodyLo, 0.30)
-#declare T_Column = Ceramic(C_Col,  C_ColLo,  0.42)   // a touch more polished
 
 // ---------------------------------------------------------------------------
 // The set: a seamless floor and an open sky, i.e. a soft-box studio.

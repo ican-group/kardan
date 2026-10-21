@@ -4,7 +4,7 @@ permalink: /tutorials/first-smart-contract-windows/
 ---
 Before writing a real validator, it helps to get the whole toolchain working
 end to end with the simplest possible Plinth program: a function that adds two
-numbers. In this tutorial you will install `uplc-ghc`, create a tiny project
+numbers. In this tutorial you will install `kardan`, create a tiny project
 from scratch, compile it, run it, and read the Plutus Core it produced.
 
 This tutorial targets **Windows**. It mirrors
@@ -56,35 +56,35 @@ with error 4551 when cabal runs them. You must turn Smart App Control off
 settings) to use this toolchain.
 
 The rest of the tutorial assumes the compiler is available as plain
-`uplc-ghc`, which is what step 1 gives you.
+`kardan`, which is what step 1 gives you.
 
 ## Step 1: Install Plinth
 
-`uplc-ghc` is distributed via ghcup as a custom tool named `plinth` (see
-[Install Plinth standalone compiler]({% link how-to/install.md %}) for the
-details). Add the Plinth release channel, then install and activate the tool:
+`kardan` is distributed via ghcup as a custom tool named `kardan` (see
+[Install Kardan]({% link how-to/install.md %}) for the
+details). Add the Kardan release channel, then install and activate the tool:
 
 ```console
-> ghcup config add-release-channel https://raw.githubusercontent.com/ican-group/ghc-plinth/ghcup-channel/ghcup-plinth.yaml
-> ghcup install plinth 9.6.169.3
-> ghcup set plinth 9.6.169.3
+> ghcup config add-release-channel https://raw.githubusercontent.com/ican-group/kardan/ghcup-channel/ghcup-kardan.yaml
+> ghcup install kardan 9.6.169.4
+> ghcup set kardan 9.6.169.4
 ```
 
 Check that the compiler is on `PATH`:
 
 ```console
-> uplc-ghc --version
+> kardan --version
 ```
 
-If you have already installed 9.6.169.3 this way, skip to step 2.
+If you have already installed 9.6.169.4 this way, skip to step 2.
 
 ## Step 2: Create the project
 
 Make a new directory and add the three files below. They are identical to the
 Linux/macOS tutorial's files.
 
-**`cabal.project`** wires up the build. It points cabal at `uplc-ghc`
-9.6.169.3 and its `ghc-pkg` (installed by ghcup as `uplc-ghc-pkg-9.6.169.3`,
+**`cabal.project`** wires up the build. It points cabal at `kardan`
+9.6.169.4 and its `ghc-pkg` (installed by ghcup as `kardan-pkg-9.6.169.4`,
 so that it does not collide with your regular GHC); pulls the
 Plinth libraries (`plutus-tx`, `plutus-core`) from the
 `ghc-plinth-plutus` fork the compiler was built against; uses the Cardano
@@ -94,13 +94,13 @@ crypto C libraries (`libsodium`, `secp256k1`, `blst`) from source via the
 
 The `with-hc-pkg` line is essential on Windows: without it, cabal picks up the
 `ghc-pkg.exe` of your regular GHC and fails with a version mismatch (see
-[Use uplc-ghc in a project]({% link how-to/use.md %})):
+[Use kardan in a project]({% link how-to/use.md %})):
 
 ```haskell
--- The uplc-ghc release. The ghc-plinth-plutus tag below must be the commit
+-- The Kardan release. The ghc-plinth-plutus tag below must be the commit
 -- that this release is built from.
-with-compiler: uplc-ghc-9.6.169.3
-with-hc-pkg:   uplc-ghc-pkg-9.6.169.3
+with-compiler: kardan-9.6.169.4
+with-hc-pkg:   kardan-pkg-9.6.169.4
 
 packages: .
 
@@ -119,12 +119,12 @@ index-state:
   , hackage.haskell.org 2026-08-06T04:37:23Z
   , cardano-haskell-packages 2026-08-05T05:00:53Z
 
--- The Plinth libraries, from the fork uplc-ghc was built against. The
--- compiler itself is built into uplc-ghc, so plutus-tx-plugin is not needed.
+-- The Plinth libraries, from the fork kardan was built against. The
+-- compiler itself is built into kardan, so plutus-tx-plugin is not needed.
 source-repository-package
   type: git
   location: https://github.com/ican-group/ghc-plinth-plutus
-  tag: 71bfaa5b04f2a4e17c13f35ff594782ec8891acf
+  tag: 896a89d6a13bff4a905b9c0f29f9e350e99785a4
   subdir: plutus-tx
           plutus-core
 
@@ -165,13 +165,13 @@ package sodium-clib
   configure-options: --enable-pie=no
 ```
 
-Use the `ghc-plinth-plutus` commit that matches your `uplc-ghc`: the compiler and
+Use the `ghc-plinth-plutus` commit that matches your `kardan`: the compiler and
 these libraries are released together as a matched set, built from the same
-commit. The commit above matches release 9.6.169.3, the release in
+commit. The commit above matches release 9.6.169.4, the release in
 `with-compiler`. To use a different release, change `with-compiler`,
 `with-hc-pkg` and this `tag` together. The commit of a release is the `plutus`
 submodule of its tag (`v<version>`) in
-[ghc-plinth](https://github.com/ican-group/ghc-plinth).
+[kardan](https://github.com/ican-group/kardan).
 
 **Not for production.** The vendored crypto C libraries pulled in by the
 `*-clib` `source-repository-package`s above have not been audited. Use this
@@ -259,7 +259,7 @@ on-chain `+`, and everything else is ordinary Haskell.
 
 The first run clones and builds the Plinth libraries and the crypto C libraries
 from source, so expect it to take a while. Because the Plinth plugin is built
-into `uplc-ghc`, no extra plugin configuration is required: the `compile` splice
+into `kardan`, no extra plugin configuration is required: the `compile` splice
 is translated to Plutus Core as part of the normal build.
 
 If the clone step fails with "Filename too long", or the build stops with
@@ -292,14 +292,14 @@ That is the [UPLC]({% link explanation/uplc.md %}) your two-line Haskell functio
 compiled to &mdash; the `+` became the `addInteger` builtin, wrapped in a
 `program` with its [language version]({% link explanation/uplc.md %}). This is
 exactly the kind of code the Cardano ledger executes, produced from Haskell by
-`uplc-ghc`.
+`kardan`.
 
 ## Where to go next
 
 - [Lock and unlock funds on a local chain]({% link tutorials/lock-and-unlock.md %})
   &mdash; the next tutorial: write a real validator, deploy it on a local
   Cardano network, and spend from it with `cardano-cli`. (Linux only for now.)
-- [Use uplc-ghc in a project]({% link how-to/use.md %}) &mdash; the same compiler
+- [Use kardan in a project]({% link how-to/use.md %}) &mdash; the same compiler
   setup, described on its own.
 - [The Plinth contract language]({% link explanation/plinth-language.md %})
   &mdash; how a real validator is written, beyond this toy function.

@@ -1,5 +1,5 @@
 ---
-title: "The Plinth standalone compiler"
+title: "Kardan"
 permalink: /explanation/standalone-compiler/
 ---
 [Plinth][plinth] (formerly known as Plutus Tx) is a subset of Haskell used to
@@ -13,14 +13,18 @@ Plinth was previously distributed as a **GHC plugin** (`plutus-tx-plugin`): you
 used a stock GHC and added the plugin to your project, and during compilation it
 intercepted the relevant definitions and translated them to Plutus Core.
 
-This repository takes a different approach. It is a fork of GHC with the Plinth
-plugin **wired in**, producing a single self-contained compiler called
-**`uplc-ghc`**. There is no separate plugin to install or configure: `uplc-ghc`
+Kardan takes a different approach. It is GHC with the Plinth plugin
+**wired in**, producing a single self-contained compiler called **`kardan`**. There is no separate plugin to install or configure: `kardan`
 behaves like an ordinary GHC, and when a module defines Plinth code it emits the
 corresponding Plutus Core alongside the usual outputs.
 
-The fork tracks an upstream GHC release and adds the Plinth integration on top;
-the `plutus` submodule supplies `plutus-tx`, `plutus-tx-plugin`, and
+The [kardan repository](https://github.com/ican-group/kardan) holds the build
+scripts, the tests and the examples. The compiler sources are two forks, each an
+upstream release plus a small set of patches: GHC
+([`ican-group/ghc-plinth`](https://github.com/ican-group/ghc-plinth), branch
+`kardan-9.6.7`) and plutus
+([`ican-group/ghc-plinth-plutus`](https://github.com/ican-group/ghc-plinth-plutus),
+branch `kardan-1.69`), which supplies `plutus-tx`, `plutus-tx-plugin` and
 `plutus-core`.
 
 ## Why a standalone compiler
@@ -29,8 +33,8 @@ Shipping a dedicated compiler, rather than a plugin you add to someone else's
 GHC, brings several benefits:
 
 - **Simpler setup.** Users deal with one tool instead of a GHC plus a matched
-  plugin package and `-fplugin` flags. Pointing cabal at `uplc-ghc` (see
-  [Use uplc-ghc in a project]({% link how-to/use.md %})) is all that is needed,
+  plugin package and `-fplugin` flags. Pointing cabal at `kardan` (see
+  [Use kardan in a project]({% link how-to/use.md %})) is all that is needed,
   and the Plinth machinery stays invisible until a module actually defines Plinth
   code.
 - **Freedom to adapt GHC.** Because the compiler is ours, we can change GHC
@@ -44,7 +48,7 @@ GHC, brings several benefits:
   Pinning the plugin to a specific GHC build keeps compiler and plugin in
   lockstep, which makes the generated Plutus Core reproducible and lets the whole
   thing be validated as a single unit (see the test and benchmark scripts in
-  [Build Plinth from source]({% link how-to/build.md %}#test-and-benchmark)).
+  [Build Kardan from source]({% link how-to/build.md %}#test-and-benchmark)).
 
 ## Further reading
 

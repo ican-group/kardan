@@ -39,7 +39,7 @@ metadata, an array of **validators**, and a registry of reusable schema
     "description": "Spending validator for a simple auction",
     "version": "1.0.0",
     "plutusVersion": "v3",
-    "compiler": { "name": "uplc-ghc", "version": "9.6.7" }
+    "compiler": { "name": "kardan", "version": "9.6.7" }
   },
   "validators": [
     {

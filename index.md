@@ -3,7 +3,7 @@ title: Overview
 permalink: /
 ---
 <!-- The wordmark animation. It plays once and stops on a frame identical to
-     plinth-wordmark.png, so the clip and the still are interchangeable once it
+     kardan-wordmark.png, so the clip and the still are interchangeable once it
      has finished. The poster is the animation's FIRST frame, not the finished
      mark -- see Note [The poster is the FIRST frame] in _logo/make-anim.sh.
      Two sources so there is always a playable one; anyone who has asked for
@@ -21,25 +21,25 @@ permalink: /
 </style>
 <p style="text-align: center; margin: 0 0 1.5rem;">
   <video class="wordmark-anim" autoplay muted playsinline preload="auto"
-         aria-label="Plinth"
-         poster="{{ '/assets/images/plinth-wordmark-poster.webp' | relative_url }}"
-         width="1200" height="467"
+         aria-label="Kardan"
+         poster="{{ '/assets/images/kardan-wordmark-poster.webp' | relative_url }}"
+         width="1416" height="467"
          style="width: 100%; max-width: 620px; height: auto;">
-    <source src="{{ '/assets/images/plinth-wordmark.webm' | relative_url }}"
+    <source src="{{ '/assets/images/kardan-wordmark.webm' | relative_url }}"
             type="video/webm">
-    <source src="{{ '/assets/images/plinth-wordmark.mp4' | relative_url }}"
+    <source src="{{ '/assets/images/kardan-wordmark.mp4' | relative_url }}"
             type="video/mp4">
   </video>
-  <img class="wordmark-still" alt="Plinth"
-       src="{{ '/assets/images/plinth-wordmark.png' | relative_url }}"
-       width="1200" height="467"
+  <img class="wordmark-still" alt="Kardan"
+       src="{{ '/assets/images/kardan-wordmark.png' | relative_url }}"
+       width="1416" height="467"
        style="width: 100%; max-width: 620px; height: auto;">
 </p>
 
-Documentation for the **Plinth** compiler, a language for writing on-chain and
-off-chain code for the [Cardano][cardano] blockchain. Plinth (formerly Plutus
-Tx) is a subset of [Haskell](https://www.haskell.org/) compiled to **Plutus
-Core**.
+Documentation for **Kardan**, a compiler for **Plinth**, a language for
+writing on-chain and off-chain code for the [Cardano][cardano] blockchain.
+Plinth (formerly Plutus Tx) is a subset of [Haskell](https://www.haskell.org/)
+compiled to **Plutus Core**. Kardan is GHC with the Plinth compiler built in.
 
 ## Finding your way around
 

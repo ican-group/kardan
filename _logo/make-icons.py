@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Cut the favicon set from the square render of plinth-icon.pov.
+"""Cut the favicon set from the square render of kardan-icon.pov.
 
 POV-Ray renders a square tile with hard corners; this rounds them off with an
 alpha mask and resamples down to the sizes the site uses. Corner radius is 22%
 of the edge, which is the iOS proportion and close to the existing flat mark.
 
-    povray +Iplinth-icon.pov +Oplinth-icon.png +W1024 +H1024 +A0.2 +AM2 +R4 +Q11
-    ./make-icons.py plinth-icon.png
+    povray +Ikardan-icon.pov +Okardan-icon.png +W1024 +H1024 +A0.2 +AM2 +R4 +Q11
+    ./make-icons.py kardan-icon.png
 
 Outputs, named to drop straight into the site's assets directory:
     apple-touch-icon.png         180
@@ -61,7 +61,7 @@ def rounded_mask(size: int) -> Image.Image:
 
 
 def main(argv: list[str]) -> int:
-    src = Path(argv[1] if len(argv) > 1 else "plinth-icon.png")
+    src = Path(argv[1] if len(argv) > 1 else "kardan-icon.png")
     prefix = argv[2] if len(argv) > 2 else ""
 
     tile = Image.open(src).convert("RGBA")

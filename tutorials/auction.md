@@ -90,12 +90,12 @@ You need:
 - the [GHCi lock tutorial]({% link tutorials/lock-and-unlock-ghci.md %})
   completed: Yaci DevKit, socat, GHC 9.6.7 and the system libraries of
   `cardano-api`;
-- `uplc-ghc` 9.6.169.3, installed as in
+- `kardan` 9.6.169.4, installed as in
   [the first tutorial]({% link tutorials/first-smart-contract.md %}).
 
 You make two projects, as in the lock tutorials:
 
-- `auction`: the validator, in Plinth, built with `uplc-ghc`. It writes
+- `auction`: the validator, in Plinth, built with `kardan`. It writes
   `auction.plutus`;
 - `auction-ghci`: the off-chain helpers, in Haskell, built with a standard
   GHC. You use them from GHCi to run the auction.
@@ -108,10 +108,10 @@ Make a directory `auction` with three files.
 [lock tutorial]({% link tutorials/lock-and-unlock.md %}):
 
 ```haskell
--- The uplc-ghc release. The ghc-plinth-plutus tag below must be the commit
+-- The Kardan release. The ghc-plinth-plutus tag below must be the commit
 -- that this release is built from.
-with-compiler: uplc-ghc-9.6.169.3
-with-hc-pkg:   uplc-ghc-pkg-9.6.169.3
+with-compiler: kardan-9.6.169.4
+with-hc-pkg:   kardan-pkg-9.6.169.4
 
 packages: .
 
@@ -130,12 +130,12 @@ index-state:
   , hackage.haskell.org 2026-08-06T04:37:23Z
   , cardano-haskell-packages 2026-08-05T05:00:53Z
 
--- The Plinth libraries, from the fork uplc-ghc was built against. The
--- compiler itself is built into uplc-ghc, so plutus-tx-plugin is not needed.
+-- The Plinth libraries, from the fork kardan was built against. The
+-- compiler itself is built into kardan, so plutus-tx-plugin is not needed.
 source-repository-package
   type: git
   location: https://github.com/ican-group/ghc-plinth-plutus
-  tag: 71bfaa5b04f2a4e17c13f35ff594782ec8891acf
+  tag: 896a89d6a13bff4a905b9c0f29f9e350e99785a4
   subdir: plutus-tx
           plutus-core
           plutus-ledger-api

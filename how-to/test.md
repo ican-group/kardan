@@ -193,7 +193,7 @@ experimentation, not production.
   `unsafeApplyCode`.
 - [How smart contracts run: Plutus Core and the CEK machine]({% link explanation/plutus-core.md %})
   &mdash; why off-chain evaluation and costing are faithful to the chain.
-- [Build Plinth from source]({% link how-to/build.md %}) &mdash; the
+- [Build Kardan from source]({% link how-to/build.md %}) &mdash; the
   tasty/golden test mechanism the compiler's own suites use.
 - [Generate a blueprint]({% link how-to/generate-blueprint.md %}) &mdash; the
   other main thing off-chain code does with a `CompiledCode`.

@@ -9,7 +9,7 @@ header:
   - title: Reference
     url: /reference/
   - title: GitHub
-    url: https://github.com/ican-group/ghc-plinth
+    url: https://github.com/ican-group/kardan
 
 # Left sidebar shown on every docs page (referenced as `sidebar: nav: docs`)
 docs:
@@ -39,7 +39,7 @@ docs:
         url: /explanation/data-representation/
       - title: Languages for smart contracts
         url: /explanation/languages/
-      - title: "The Plinth standalone compiler"
+      - title: "Kardan"
         url: /explanation/standalone-compiler/
 
   - title: Tutorials
@@ -59,11 +59,11 @@ docs:
   - title: How-to guides
     url: /how-to/
     children:
-      - title: Install Plinth standalone compiler
+      - title: Install Kardan
         url: /how-to/install/
-      - title: Build Plinth from source
+      - title: Build Kardan from source
         url: /how-to/build/
-      - title: Use uplc-ghc in a project
+      - title: Use kardan in a project
         url: /how-to/use/
       - title: Generate a blueprint
         url: /how-to/generate-blueprint/

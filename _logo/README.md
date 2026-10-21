@@ -1,14 +1,14 @@
 # Logo sources
 
-POV-Ray scenes for the 3D Plinth marks. Underscore-prefixed, so Jekyll does not
+POV-Ray scenes for the 3D Kardan marks. Underscore-prefixed, so Jekyll does not
 copy any of it into the built site.
 
 | File | What |
 |---|---|
-| `plinth-common.inc` | palette, geometry, materials, light rig -- shared, so the marks cannot drift apart |
-| `plinth-logo.pov` | the PLINTH wordmark |
-| `plinth-icon.pov` | the plinth alone on a brand tile, for the favicons |
-| `plinth-anim.pov` | the wordmark assembling itself: the letters drop in and the plinth lands last |
+| `kardan-common.inc` | palette, geometry, materials, light rig -- shared, so the marks cannot drift apart |
+| `kardan-logo.pov` | the KARDAN wordmark |
+| `kardan-icon.pov` | the K alone on a brand tile, for the favicons |
+| `kardan-anim.pov` | the wordmark assembling itself: the letters drop in one by one |
 | `anim.ini` | frame count, clock range and render size for the animation |
 | `make-icons.py` | rounds the tile corners and cuts the favicon sizes |
 | `make-anim.sh` | renders the animation and encodes the clip, poster and fallback |
@@ -16,12 +16,12 @@ copy any of it into the built site.
 Rendering, from this directory:
 
 ```sh
-# wordmark -> assets/images/plinth-wordmark.png (downscaled to 1200px wide)
-povray +Iplinth-logo.pov +Oplinth-logo.png +W1800 +H700 +A0.25 +AM2 +R3 +Q11
+# wordmark -> assets/images/kardan-wordmark.png (downscaled to 1416px wide)
+povray +Ikardan-logo.pov +Okardan-logo.png +W2124 +H700 +A0.25 +AM2 +R3 +Q11
 
 # favicons -> assets/
-povray +Iplinth-icon.pov +Oplinth-icon.png +W1024 +H1024 +A0.2 +AM2 +R4 +Q11
-./make-icons.py plinth-icon.png
+povray +Ikardan-icon.pov +Okardan-icon.png +W1024 +H1024 +A0.2 +AM2 +R4 +Q11
+./make-icons.py kardan-icon.png
 
 # animated wordmark -> assets/images/ (~5 min, 80 frames)
 ./make-anim.sh
@@ -30,15 +30,15 @@ povray +Iplinth-icon.pov +Oplinth-icon.png +W1024 +H1024 +A0.2 +AM2 +R4 +Q11
 ./make-anim.sh --check     # verify the last frame really is the still
 ```
 
-That writes three files: `plinth-wordmark.webm` (VP9, what nearly everyone
-gets), `plinth-wordmark.mp4` (H.264, for browsers too old for VP9) and
-`plinth-wordmark-poster.webp`.
+That writes three files: `kardan-wordmark.webm` (VP9, what nearly everyone
+gets), `kardan-wordmark.mp4` (H.264, for browsers too old for VP9) and
+`kardan-wordmark-poster.webp`.
 
 The animation plays once and stops, and its last frame is the committed still.
-That is what lets `index.md` swap the clip for `plinth-wordmark.png` when a
+That is what lets `index.md` swap the clip for `kardan-wordmark.png` when a
 reader has asked for reduced motion -- they end up looking at the same image
 everyone else does. Keep that property if you change the timing: `--check`
-tests it, and `Note [The last frame is the still]` in `plinth-anim.pov`
+tests it, and `Note [The last frame is the still]` in `kardan-anim.pov`
 explains it.
 
 Two encoding decisions are already made and worth not re-litigating, both
@@ -52,7 +52,7 @@ coral-on-white. The site is light-skinned, so only the light variants are
 committed.
 
 The palette comes from the site's own CSS (`#fc4d50`, `#ffffff`, `#f2f2f2`,
-`#222222`). Two things in `plinth-common.inc` are worth reading before changing
+`#222222`). Two things in `kardan-common.inc` are worth reading before changing
 the lighting: `Note [sRGB hex under assumed_gamma 1.0]` and
 `Note [Hitting the brand colour]` -- the coral albedo is hand-calibrated against
 this light rig, and moving the lights invalidates it.
