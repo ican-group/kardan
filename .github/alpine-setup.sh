@@ -19,4 +19,8 @@ curl --proto "=https" --tlsv1.2 -sSf https://get-ghcup.haskell.org | \
   BOOTSTRAP_HASKELL_CABAL_VERSION=latest sh
 . "$HOME/.ghcup/env"
 
-git config --global --add safe.directory /workspace
+# The workspace belongs to the runner user, not to root in this container. Git
+# checks the owner of each repository, and the submodules (ghc and its own
+# submodules, plutus) are repositories too, so allow them all: the container
+# is thrown away after the job.
+git config --global --add safe.directory '*'
