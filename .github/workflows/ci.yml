@@ -33,9 +33,9 @@ permissions:
 env:
   # The version being released ("9.6.169.1", or "v9.6.169.1" -- the steps below
   # strip the "v"), empty on ordinary pushes and PRs. It is passed to
-  # plinth-build.sh as RELEASE_VERSION, which stamps the compiler with exactly
+  # kardan-build.sh as RELEASE_VERSION, which stamps the compiler with exactly
   # that version instead of the usual <base>.<date>. See Note [Release
-  # versioning] in plinth-build.sh.
+  # versioning] in kardan-build.sh.
   REQUESTED_VERSION: ${{ github.event.inputs.release_version || '' }}
 
 jobs:
@@ -60,7 +60,7 @@ jobs:
           echo "error: publish was requested without a release_version"
           exit 1
         fi
-        # The same rule plinth-build.sh applies when stamping the compiler, so a
+        # The same rule kardan-build.sh applies when stamping the compiler, so a
         # version it would reject never reaches the build. See Note [Release
         # versioning] there.
         BASE_VERSION=$(sed -n 's/^AC_INIT(\[[^]]*\], *\[\([^]]*\)\].*/\1/p' configure.ac)
@@ -79,8 +79,8 @@ jobs:
         fi
         echo "releasing $VERSION from $GITHUB_REF_NAME ($GITHUB_SHA)"
 
-  plinth-build-linux:
-    name: plinth-build / ${{ matrix.os }} / ghc ${{ matrix.ghc }}
+  kardan-build-linux:
+    name: kardan-build / ${{ matrix.os }} / ghc ${{ matrix.ghc }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -100,33 +100,33 @@ jobs:
       with:
         ghc-version: ${{ matrix.ghc }}
 
-    # BINDIST=1 produces the fixed-up uplc-ghc bindist (+ .tar.xz archive) while
-    # keeping the lean dev flavour. The plinth-test job consumes that archive.
+    # BINDIST=1 produces the fixed-up kardan bindist (+ .tar.xz archive) while
+    # keeping the lean dev flavour. The kardan-test job consumes that archive.
     # RELEASE_VERSION is empty except on a release build, where it pins the
-    # version; see Note [Release versioning] in plinth-build.sh.
-    - name: Build uplc-ghc bindist
-      run: RELEASE_VERSION="${REQUESTED_VERSION#v}" BINDIST=1 ./plinth-build.sh
+    # version; see Note [Release versioning] in kardan-build.sh.
+    - name: Build kardan bindist
+      run: RELEASE_VERSION="${REQUESTED_VERSION#v}" BINDIST=1 ./kardan-build.sh
 
-    - name: Upload uplc-ghc bindist
+    - name: Upload kardan bindist
       uses: actions/upload-artifact@v4
       with:
         # key by platform + GHC so multiple build matrix legs (or another job)
         # never collide on the artifact name within a single run. See the
-        # matching download in the plinth-test job, which shares this matrix.
-        name: plinth-bindist-${{ matrix.os }}-${{ matrix.ghc }}
+        # matching download in the kardan-test job, which shares this matrix.
+        name: kardan-bindist-${{ matrix.os }}-${{ matrix.ghc }}
         path: _build/bindist/*.tar.xz
         retention-days: 1
         # the archive is already xz-compressed; don't re-zip it
         compression-level: 0
 
-  # plinth-test runs in its own job for a separate status check and timeout
-  # budget. It depends on `plinth-build-linux` (it can't run in parallel: it
+  # kardan-test runs in its own job for a separate status check and timeout
+  # budget. It depends on `kardan-build-linux` (it can't run in parallel: it
   # needs the built compiler), downloading the bindist archive instead of
   # rebuilding GHC. Its matrix mirrors the build so the artifact-name key
   # matches per leg.
-  plinth-test-linux:
-    name: plinth-test / ${{ matrix.os }} / ghc ${{ matrix.ghc }}
-    needs: plinth-build-linux
+  kardan-test-linux:
+    name: kardan-test / ${{ matrix.os }} / ghc ${{ matrix.ghc }}
+    needs: kardan-build-linux
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -161,18 +161,18 @@ jobs:
         swapon --show
         free -h
 
-    - name: Download uplc-ghc bindist
+    - name: Download kardan bindist
       uses: actions/download-artifact@v4
       with:
-        # matches the plinth-build upload name; both jobs share the same matrix.
-        name: plinth-bindist-${{ matrix.os }}-${{ matrix.ghc }}
+        # matches the kardan-build upload name; both jobs share the same matrix.
+        name: kardan-bindist-${{ matrix.os }}-${{ matrix.ghc }}
         path: _build/artifact
 
     # Install the bindist with the usual configure + make install; the bindist's
-    # wrappers/ dir (added by the BINDIST fixup) makes this produce bin/uplc-ghc.
+    # wrappers/ dir (added by the BINDIST fixup) makes this produce bin/kardan.
     # Each step is guarded so a missing artifact or failed install fails loudly
     # here, not with a confusing error deep in the test.
-    - name: Install uplc-ghc bindist
+    - name: Install kardan bindist
       run: |
         shopt -s nullglob
         archives=(_build/artifact/*.tar.xz)
@@ -183,15 +183,15 @@ jobs:
         mkdir -p _build/bindist
         echo "extracting ${archives[0]}"
         tar --xz -xf "${archives[0]}" -C _build/bindist
-        bindirs=(_build/bindist/ghc-*)
+        bindirs=(_build/bindist/kardan-*)
         if [ ${#bindirs[@]} -ne 1 ]; then
           echo "error: expected one extracted bindist dir, found: ${bindirs[*]:-none}"
           exit 1
         fi
         ( cd "${bindirs[0]}" && ./configure --prefix="$GITHUB_WORKSPACE/_build/install" && make install )
-        uplc="$GITHUB_WORKSPACE/_build/install/bin/uplc-ghc"
-        if [ ! -x "$uplc" ]; then
-          echo "error: $uplc missing or not executable after make install"
+        kardan="$GITHUB_WORKSPACE/_build/install/bin/kardan"
+        if [ ! -x "$kardan" ]; then
+          echo "error: $kardan missing or not executable after make install"
           ls -l "$GITHUB_WORKSPACE/_build/install/bin" || true
           exit 1
         fi
@@ -200,17 +200,17 @@ jobs:
     # Build packages serially (JOBS=1): compiling with the Plinth plugin
     # (Core -> PLC) is memory-heavy, and concurrent GHC processes OOM-kill the
     # runner (seen mid-compile on PlutusLedgerApi.V3).
-    - name: Test uplc-ghc
-      run: JOBS=1 GHC="$GITHUB_WORKSPACE/_build/install/bin/uplc-ghc" ./plinth-test.sh
+    - name: Test kardan
+      run: JOBS=1 GHC="$GITHUB_WORKSPACE/_build/install/bin/kardan" ./kardan-test.sh
 
-  # musl (Alpine) build, mirroring plinth-build-linux. GitHub runners are glibc
+  # musl (Alpine) build, mirroring kardan-build-linux. GitHub runners are glibc
   # and haskell-actions/setup only ships glibc GHC, so the toolchain + build run
   # inside an alpine:3.20 container via `docker run` (with a musl boot-GHC from
   # ghcup). The workspace is mounted in; host-level free-disk / submodule steps
   # still run on the runner first. `docker run` (not a job-level `container:`)
   # keeps those host steps working.
-  plinth-build-linux-musl:
-    name: plinth-build / ${{ matrix.os }} (musl) / ghc ${{ matrix.ghc }}
+  kardan-build-linux-musl:
+    name: kardan-build / ${{ matrix.os }} (musl) / ghc ${{ matrix.ghc }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -245,13 +245,13 @@ jobs:
         sudo mount --bind /mnt/_build "$GITHUB_WORKSPACE/_build"
         sudo chown "$USER" "$GITHUB_WORKSPACE/_build"
 
-    # The static plugin baked into uplc-ghc is built from the plutus submodule.
+    # The static plugin baked into kardan is built from the plutus submodule.
     - name: Init and update submodules
       run: bash .github/fetch-submodules.sh
 
-    # BINDIST=1 produces the fixed-up uplc-ghc bindist (+ .tar.xz). plinth-build.sh
+    # BINDIST=1 produces the fixed-up kardan bindist (+ .tar.xz). kardan-build.sh
     # appends a -musl suffix to the archive name when run on musl libc.
-    - name: Build uplc-ghc bindist (Alpine/musl)
+    - name: Build kardan bindist (Alpine/musl)
       run: |
         docker run --rm \
           -v "$GITHUB_WORKSPACE:/workspace" -w /workspace \
@@ -260,23 +260,23 @@ jobs:
           alpine:3.20 sh -c '
             set -eux
             . ./.github/alpine-setup.sh
-            ./plinth-build.sh
+            ./kardan-build.sh
           '
 
-    - name: Upload uplc-ghc bindist (musl)
+    - name: Upload kardan bindist (musl)
       uses: actions/upload-artifact@v4
       with:
-        name: plinth-bindist-musl-${{ matrix.os }}-${{ matrix.ghc }}
+        name: kardan-bindist-musl-${{ matrix.os }}-${{ matrix.ghc }}
         path: _build/bindist/*.tar.xz
         retention-days: 1
         # the archive is already xz-compressed; don't re-zip it
         compression-level: 0
 
-  # musl test, mirroring plinth-test-linux: consume the musl bindist, install it
-  # and run the test suite inside alpine:3.20. Depends on plinth-build-linux-musl.
-  plinth-test-linux-musl:
-    name: plinth-test / ${{ matrix.os }} (musl) / ghc ${{ matrix.ghc }}
-    needs: plinth-build-linux-musl
+  # musl test, mirroring kardan-test-linux: consume the musl bindist, install it
+  # and run the test suite inside alpine:3.20. Depends on kardan-build-linux-musl.
+  kardan-test-linux-musl:
+    name: kardan-test / ${{ matrix.os }} (musl) / ghc ${{ matrix.ghc }}
+    needs: kardan-build-linux-musl
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -319,16 +319,16 @@ jobs:
         swapon --show
         free -h
 
-    - name: Download uplc-ghc bindist (musl)
+    - name: Download kardan bindist (musl)
       uses: actions/download-artifact@v4
       with:
-        name: plinth-bindist-musl-${{ matrix.os }}-${{ matrix.ghc }}
+        name: kardan-bindist-musl-${{ matrix.os }}-${{ matrix.ghc }}
         path: _build/artifact
 
     # Install the musl bindist (configure + make install) and run the test suite
     # inside Alpine. Mirrors the glibc test job's install guards (exactly one
     # archive, exactly one extracted dir, executable check) and JOBS=1.
-    - name: Install and test uplc-ghc (Alpine/musl)
+    - name: Install and test kardan (Alpine/musl)
       run: |
         docker run --rm \
           -v "$GITHUB_WORKSPACE:/workspace" -w /workspace \
@@ -346,25 +346,25 @@ jobs:
             mkdir -p _build/bindist
             echo "extracting $archives"
             tar --xz -xf "$archives" -C _build/bindist
-            bindirs=$(ls -d _build/bindist/ghc-*)
+            bindirs=$(ls -d _build/bindist/kardan-*)
             if [ "$(echo "$bindirs" | wc -l)" -ne 1 ]; then
               echo "error: expected one extracted bindist dir, found: ${bindirs:-none}"
               exit 1
             fi
             ( cd "$bindirs" && ./configure --prefix=/workspace/_build/install && make install )
-            uplc=/workspace/_build/install/bin/uplc-ghc
-            if [ ! -x "$uplc" ]; then
-              echo "error: $uplc missing or not executable after make install"
+            kardan=/workspace/_build/install/bin/kardan
+            if [ ! -x "$kardan" ]; then
+              echo "error: $kardan missing or not executable after make install"
               ls -l /workspace/_build/install/bin || true
               exit 1
             fi
             rm -rf _build/artifact
 
-            JOBS=1 GHC="$uplc" ./plinth-test.sh
+            JOBS=1 GHC="$kardan" ./kardan-test.sh
           '
 
-  plinth-build-windows:
-    name: plinth-build / windows-latest / ghc ${{ matrix.ghc }}
+  kardan-build-windows:
+    name: kardan-build / windows-latest / ghc ${{ matrix.ghc }}
     runs-on: windows-latest
     strategy:
       fail-fast: false
@@ -414,28 +414,28 @@ jobs:
         cabal-version: "latest"
         cabal-update: true
 
-    # BINDIST=1 produces the fixed-up uplc-ghc bindist (+ .tar.xz archive); the
-    # plinth-test-windows job consumes that archive instead of rebuilding.
-    - name: Build uplc-ghc bindist
-      run: RELEASE_VERSION="${REQUESTED_VERSION#v}" BINDIST=1 ./plinth-build.sh
+    # BINDIST=1 produces the fixed-up kardan bindist (+ .tar.xz archive); the
+    # kardan-test-windows job consumes that archive instead of rebuilding.
+    - name: Build kardan bindist
+      run: RELEASE_VERSION="${REQUESTED_VERSION#v}" BINDIST=1 ./kardan-build.sh
 
-    - name: Upload uplc-ghc bindist
+    - name: Upload kardan bindist
       uses: actions/upload-artifact@v4
       with:
         # key by GHC so this never collides with another job's artifact within a
-        # run. See the matching download in the plinth-test-windows job.
-        name: plinth-bindist-windows-${{ matrix.ghc }}
+        # run. See the matching download in the kardan-test-windows job.
+        name: kardan-bindist-windows-${{ matrix.ghc }}
         path: _build/bindist/*.tar.xz
         retention-days: 1
         # the archive is already xz-compressed; don't re-zip it
         compression-level: 0
 
-  # plinth-test on Windows, mirroring plinth-test-linux: consume the bindist
-  # produced by plinth-build-windows, install it (configure + make install under
-  # MSYS2) and run the test suite. Depends on plinth-build-windows.
-  plinth-test-windows:
-    name: plinth-test / windows-latest / ghc ${{ matrix.ghc }}
-    needs: plinth-build-windows
+  # kardan-test on Windows, mirroring kardan-test-linux: consume the bindist
+  # produced by kardan-build-windows, install it (configure + make install under
+  # MSYS2) and run the test suite. Depends on kardan-build-windows.
+  kardan-test-windows:
+    name: kardan-test / windows-latest / ghc ${{ matrix.ghc }}
+    needs: kardan-build-windows
     runs-on: windows-latest
     strategy:
       fail-fast: false
@@ -476,7 +476,7 @@ jobs:
           autoconf automake make tar xz patch curl
           mingw-w64-x86_64-python mingw-w64-x86_64-python-sphinx
 
-    # plinth-test.sh invokes cabal, so cabal must be on PATH. (The boot GHC this
+    # kardan-test.sh invokes cabal, so cabal must be on PATH. (The boot GHC this
     # also installs is unused by the test.)
     - uses: haskell-actions/setup@v2
       id: setup
@@ -486,16 +486,16 @@ jobs:
         cabal-version: "latest"
         cabal-update: true
 
-    - name: Download uplc-ghc bindist
+    - name: Download kardan bindist
       uses: actions/download-artifact@v4
       with:
-        # matches the plinth-build-windows upload name.
-        name: plinth-bindist-windows-${{ matrix.ghc }}
+        # matches the kardan-build-windows upload name.
+        name: kardan-bindist-windows-${{ matrix.ghc }}
         path: _build/artifact
 
     # Unlike Unix, the Windows GHC bindist has no configure/make install: it is
-    # relocatable, so we just extract it and run bin/uplc-ghc.exe in place.
-    - name: Extract uplc-ghc bindist
+    # relocatable, so we just extract it and run bin/kardan.exe in place.
+    - name: Extract kardan bindist
       run: |
         shopt -s nullglob
         archives=(_build/artifact/*.tar.xz)
@@ -506,35 +506,35 @@ jobs:
         mkdir -p _build/install
         echo "extracting ${archives[0]}"
         tar --xz -xf "${archives[0]}" -C _build/install
-        bindirs=(_build/install/ghc-*)
+        bindirs=(_build/install/kardan-*)
         if [ ${#bindirs[@]} -ne 1 ]; then
           echo "error: expected one extracted bindist dir, found: ${bindirs[*]:-none}"
           exit 1
         fi
-        uplc="${bindirs[0]}/bin/uplc-ghc.exe"
-        if [ ! -x "$uplc" ]; then
-          echo "error: $uplc missing or not executable in extracted bindist"
+        kardan="${bindirs[0]}/bin/kardan.exe"
+        if [ ! -x "$kardan" ]; then
+          echo "error: $kardan missing or not executable in extracted bindist"
           ls -l "${bindirs[0]}/bin" || true
           exit 1
         fi
         rm -rf _build/artifact
 
     # Build packages serially (JOBS=1): compiling with the Plinth plugin
-    # (Core -> PLC) is memory-heavy. Pass GHC as an absolute path: plinth-test.sh
+    # (Core -> PLC) is memory-heavy. Pass GHC as an absolute path: kardan-test.sh
     # cd's into plinth/test before invoking cabal, so a repo-root-relative path
     # would be resolved against the wrong directory.
-    - name: Test uplc-ghc
+    - name: Test kardan
       run: |
-        bindirs=(_build/install/ghc-*)
-        JOBS=1 GHC="$(pwd)/${bindirs[0]}/bin/uplc-ghc.exe" ./plinth-test.sh
+        bindirs=(_build/install/kardan-*)
+        JOBS=1 GHC="$(pwd)/${bindirs[0]}/bin/kardan.exe" ./kardan-test.sh
 
-  # macOS build, mirroring plinth-build-linux. macOS uses the Unix bindist
+  # macOS build, mirroring kardan-build-linux. macOS uses the Unix bindist
   # (configure + make install), so the build is much like Linux; the
   # differences are: no /mnt large-disk mount (the runner's disk is large
   # enough for the lean flavour) and autoconf/automake come from Homebrew
   # rather than the base image. Runs on Apple Silicon (aarch64-darwin).
-  plinth-build-macos:
-    name: plinth-build / macos-15 / ghc ${{ matrix.ghc }}
+  kardan-build-macos:
+    name: kardan-build / macos-15 / ghc ${{ matrix.ghc }}
     runs-on: macos-15
     strategy:
       fail-fast: false
@@ -547,7 +547,7 @@ jobs:
       with:
         submodules: false
 
-    # The static plugin baked into uplc-ghc is built from the plutus submodule.
+    # The static plugin baked into kardan is built from the plutus submodule.
     - name: Init and update submodules
       run: bash .github/fetch-submodules.sh
 
@@ -565,28 +565,28 @@ jobs:
         cabal-version: "latest"
         cabal-update: true
 
-    # BINDIST=1 produces the fixed-up uplc-ghc bindist (+ .tar.xz archive); the
-    # plinth-test-macos job consumes that archive instead of rebuilding.
-    - name: Build uplc-ghc bindist
-      run: RELEASE_VERSION="${REQUESTED_VERSION#v}" BINDIST=1 ./plinth-build.sh
+    # BINDIST=1 produces the fixed-up kardan bindist (+ .tar.xz archive); the
+    # kardan-test-macos job consumes that archive instead of rebuilding.
+    - name: Build kardan bindist
+      run: RELEASE_VERSION="${REQUESTED_VERSION#v}" BINDIST=1 ./kardan-build.sh
 
-    - name: Upload uplc-ghc bindist
+    - name: Upload kardan bindist
       uses: actions/upload-artifact@v4
       with:
         # key by GHC so this never collides with another job's artifact within a
-        # run. See the matching download in the plinth-test-macos job.
-        name: plinth-bindist-macos-${{ matrix.ghc }}
+        # run. See the matching download in the kardan-test-macos job.
+        name: kardan-bindist-macos-${{ matrix.ghc }}
         path: _build/bindist/*.tar.xz
         retention-days: 1
         # the archive is already xz-compressed; don't re-zip it
         compression-level: 0
 
-  # plinth-test on macOS, mirroring plinth-test-linux: consume the bindist
-  # produced by plinth-build-macos, install it (configure + make install) and
-  # run the test suite. Depends on plinth-build-macos.
-  plinth-test-macos:
-    name: plinth-test / macos-15 / ghc ${{ matrix.ghc }}
-    needs: plinth-build-macos
+  # kardan-test on macOS, mirroring kardan-test-linux: consume the bindist
+  # produced by kardan-build-macos, install it (configure + make install) and
+  # run the test suite. Depends on kardan-build-macos.
+  kardan-test-macos:
+    name: kardan-test / macos-15 / ghc ${{ matrix.ghc }}
+    needs: kardan-build-macos
     runs-on: macos-15
     strategy:
       fail-fast: false
@@ -604,7 +604,7 @@ jobs:
     - name: Init and update submodules
       run: bash .github/fetch-submodules.sh
 
-    # plinth-test.sh invokes cabal, so cabal must be on PATH. (The boot GHC this
+    # kardan-test.sh invokes cabal, so cabal must be on PATH. (The boot GHC this
     # also installs is unused by the test.)
     - uses: haskell-actions/setup@v2
       id: setup
@@ -614,18 +614,18 @@ jobs:
         cabal-version: "latest"
         cabal-update: true
 
-    - name: Download uplc-ghc bindist
+    - name: Download kardan bindist
       uses: actions/download-artifact@v4
       with:
-        # matches the plinth-build-macos upload name.
-        name: plinth-bindist-macos-${{ matrix.ghc }}
+        # matches the kardan-build-macos upload name.
+        name: kardan-bindist-macos-${{ matrix.ghc }}
         path: _build/artifact
 
     # Install the bindist with the usual configure + make install; the bindist's
-    # wrappers/ dir (added by the BINDIST fixup) makes this produce bin/uplc-ghc.
+    # wrappers/ dir (added by the BINDIST fixup) makes this produce bin/kardan.
     # Each step is guarded so a missing artifact or failed install fails loudly
     # here, not with a confusing error deep in the test.
-    - name: Install uplc-ghc bindist
+    - name: Install kardan bindist
       run: |
         shopt -s nullglob
         archives=(_build/artifact/*.tar.xz)
@@ -636,15 +636,15 @@ jobs:
         mkdir -p _build/bindist
         echo "extracting ${archives[0]}"
         tar --xz -xf "${archives[0]}" -C _build/bindist
-        bindirs=(_build/bindist/ghc-*)
+        bindirs=(_build/bindist/kardan-*)
         if [ ${#bindirs[@]} -ne 1 ]; then
           echo "error: expected one extracted bindist dir, found: ${bindirs[*]:-none}"
           exit 1
         fi
         ( cd "${bindirs[0]}" && ./configure --prefix="$GITHUB_WORKSPACE/_build/install" && make install )
-        uplc="$GITHUB_WORKSPACE/_build/install/bin/uplc-ghc"
-        if [ ! -x "$uplc" ]; then
-          echo "error: $uplc missing or not executable after make install"
+        kardan="$GITHUB_WORKSPACE/_build/install/bin/kardan"
+        if [ ! -x "$kardan" ]; then
+          echo "error: $kardan missing or not executable after make install"
           ls -l "$GITHUB_WORKSPACE/_build/install/bin" || true
           exit 1
         fi
@@ -655,20 +655,20 @@ jobs:
     # (PlutusLedgerApi.V3.Contexts) spikes well past the runner's RAM; unlike
     # the Linux job (explicit swapfile) macOS grows its swap dynamically, so the
     # spike spills to swap on its own and no swap-setup step is needed here.
-    - name: Test uplc-ghc
-      run: JOBS=1 GHC="$GITHUB_WORKSPACE/_build/install/bin/uplc-ghc" ./plinth-test.sh
+    - name: Test kardan
+      run: JOBS=1 GHC="$GITHUB_WORKSPACE/_build/install/bin/kardan" ./kardan-test.sh
 
   # ghcup install tests: verify each platform's bindist installs cleanly as the
-  # custom `plinth` ghcup tool -- the same path end users take -- on every push,
-  # not just on tags. Each mirrors its plinth-test-* sibling but installs via
+  # custom `kardan` ghcup tool -- the same path end users take -- on every push,
+  # not just on tags. Each mirrors its kardan-test-* sibling but installs via
   # ghcup + generate-ghcup-metadata.py (file:// metadata) instead of a bare
   # configure+make, so a broken dlInstallSpec / generator / metadata schema is
-  # caught in the PR that introduces it. plinth-ghcup-test.sh does the work; it
+  # caught in the PR that introduces it. kardan-ghcup-test.sh does the work; it
   # needs only the bindist tarball + python3 + a ghcup >= 0.2.1.0 (no GHC
   # rebuild, no submodules -- the sample it compiles is plain Haskell).
-  plinth-ghcup-test-linux:
-    name: plinth-ghcup-test / ${{ matrix.os }} / ghc ${{ matrix.ghc }}
-    needs: plinth-build-linux
+  kardan-ghcup-test-linux:
+    name: kardan-ghcup-test / ${{ matrix.os }} / ghc ${{ matrix.ghc }}
+    needs: kardan-build-linux
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -682,14 +682,14 @@ jobs:
       with:
         submodules: false
 
-    - name: Download uplc-ghc bindist
+    - name: Download kardan bindist
       uses: actions/download-artifact@v4
       with:
-        name: plinth-bindist-${{ matrix.os }}-${{ matrix.ghc }}
+        name: kardan-bindist-${{ matrix.os }}-${{ matrix.ghc }}
         path: _build/artifact
 
     # A stock ghcup for this architecture; the installer DSL needs >= 0.2.1.0
-    # (plinth-ghcup-test.sh capability-gates on it).
+    # (kardan-ghcup-test.sh capability-gates on it).
     - name: Install stock ghcup
       run: |
         set -eux
@@ -699,12 +699,12 @@ jobs:
         chmod +x "$HOME/.local/bin/ghcup"
         echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
-    - name: Install and test uplc-ghc via ghcup
-      run: BINDIST_DIR=_build/artifact ./plinth-ghcup-test.sh
+    - name: Install and test kardan via ghcup
+      run: BINDIST_DIR=_build/artifact ./kardan-ghcup-test.sh
 
-  plinth-ghcup-test-linux-musl:
-    name: plinth-ghcup-test / ${{ matrix.os }} (musl) / ghc ${{ matrix.ghc }}
-    needs: plinth-build-linux-musl
+  kardan-ghcup-test-linux-musl:
+    name: kardan-ghcup-test / ${{ matrix.os }} (musl) / ghc ${{ matrix.ghc }}
+    needs: kardan-build-linux-musl
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -718,16 +718,16 @@ jobs:
       with:
         submodules: false
 
-    - name: Download uplc-ghc bindist (musl)
+    - name: Download kardan bindist (musl)
       uses: actions/download-artifact@v4
       with:
-        name: plinth-bindist-musl-${{ matrix.os }}-${{ matrix.ghc }}
+        name: kardan-bindist-musl-${{ matrix.os }}-${{ matrix.ghc }}
         path: _build/artifact
 
-    # Run inside Alpine so the musl uplc-ghc can execute. Unlike the build/test
+    # Run inside Alpine so the musl kardan can execute. Unlike the build/test
     # jobs we do NOT source alpine-setup.sh: that bootstraps a full boot GHC +
     # cabal we would never use here. Instead install just the deps needed to run
-    # uplc-ghc and link the sample, and download the ghcup binary directly --
+    # kardan and link the sample, and download the ghcup binary directly --
     # the same x86_64/aarch64-linux ghcup the official installer uses on Alpine.
     #
     # coreutils/findutils/grep are the GNU tools the bindist's `make install`
@@ -737,7 +737,7 @@ jobs:
     # EXPECT_MUSL=1 asserts the artifact really is the musl bindist: the ghcup
     # platform is derived from the bindist name, and a musl bindist mislabelled
     # as glibc installs fine here while being broken for users on Alpine.
-    - name: Install and test uplc-ghc via ghcup (Alpine/musl)
+    - name: Install and test kardan via ghcup (Alpine/musl)
       run: |
         docker run --rm \
           -v "$GITHUB_WORKSPACE:/workspace" -w /workspace \
@@ -751,12 +751,12 @@ jobs:
               -o "$HOME/.local/bin/ghcup"
             chmod +x "$HOME/.local/bin/ghcup"
             BINDIST_DIR=_build/artifact GHCUP_BIN="$HOME/.local/bin/ghcup" \
-              EXPECT_MUSL=1 bash ./plinth-ghcup-test.sh
+              EXPECT_MUSL=1 bash ./kardan-ghcup-test.sh
           '
 
-  plinth-ghcup-test-macos:
-    name: plinth-ghcup-test / macos-15 / ghc ${{ matrix.ghc }}
-    needs: plinth-build-macos
+  kardan-ghcup-test-macos:
+    name: kardan-ghcup-test / macos-15 / ghc ${{ matrix.ghc }}
+    needs: kardan-build-macos
     runs-on: macos-15
     strategy:
       fail-fast: false
@@ -769,10 +769,10 @@ jobs:
       with:
         submodules: false
 
-    - name: Download uplc-ghc bindist
+    - name: Download kardan bindist
       uses: actions/download-artifact@v4
       with:
-        name: plinth-bindist-macos-${{ matrix.ghc }}
+        name: kardan-bindist-macos-${{ matrix.ghc }}
         path: _build/artifact
 
     # macos-15 is Apple Silicon (aarch64-apple-darwin).
@@ -785,12 +785,12 @@ jobs:
         chmod +x "$HOME/.local/bin/ghcup"
         echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
-    - name: Install and test uplc-ghc via ghcup
-      run: BINDIST_DIR=_build/artifact ./plinth-ghcup-test.sh
+    - name: Install and test kardan via ghcup
+      run: BINDIST_DIR=_build/artifact ./kardan-ghcup-test.sh
 
-  plinth-ghcup-test-windows:
-    name: plinth-ghcup-test / windows-latest / ghc ${{ matrix.ghc }}
-    needs: plinth-build-windows
+  kardan-ghcup-test-windows:
+    name: kardan-ghcup-test / windows-latest / ghc ${{ matrix.ghc }}
+    needs: kardan-build-windows
     runs-on: windows-latest
     strategy:
       fail-fast: false
@@ -812,7 +812,7 @@ jobs:
         submodules: false
 
     # python3 (for generate-ghcup-metadata.py) + tar/xz/curl to fetch ghcup and
-    # unpack. cygpath (used by plinth-ghcup-test.sh for native/MSYS path
+    # unpack. cygpath (used by kardan-ghcup-test.sh for native/MSYS path
     # translation) is part of the base MSYS2 install.
     - name: Setup MSYS2
       uses: msys2/setup-msys2@v2
@@ -823,10 +823,10 @@ jobs:
         install: >-
           tar xz curl mingw-w64-x86_64-python
 
-    - name: Download uplc-ghc bindist
+    - name: Download kardan bindist
       uses: actions/download-artifact@v4
       with:
-        name: plinth-bindist-windows-${{ matrix.ghc }}
+        name: kardan-bindist-windows-${{ matrix.ghc }}
         path: _build/artifact
 
     - name: Install stock ghcup
@@ -836,19 +836,19 @@ jobs:
         curl -fL "https://downloads.haskell.org/~ghcup/x86_64-mingw64-ghcup.exe" \
           -o "$HOME/.local/bin/ghcup.exe"
 
-    - name: Install and test uplc-ghc via ghcup
-      run: BINDIST_DIR=_build/artifact GHCUP_BIN="$HOME/.local/bin/ghcup.exe" ./plinth-ghcup-test.sh
+    - name: Install and test kardan via ghcup
+      run: BINDIST_DIR=_build/artifact GHCUP_BIN="$HOME/.local/bin/ghcup.exe" ./kardan-ghcup-test.sh
 
   # Note [ghcup release channel]
   # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   # Once every build and test job has passed, tag the revision, publish the
   # per-platform bindists as a GitHub Release and (re)generate the ghcup channel
   # metadata on the ghcup-channel branch (see Note [Tagging a release] below).
-  # uplc-ghc is distributed as a custom third-party ghcup tool named `plinth`,
+  # Kardan is distributed as a custom third-party ghcup tool named `kardan`,
   # installable with a stock ghcup >= 0.2.1.0 (installer DSL). Users then run:
   #   ghcup config add-release-channel \
-  #     https://raw.githubusercontent.com/ican-group/ghc-plinth/ghcup-channel/ghcup-plinth.yaml
-  #   ghcup install plinth <version>
+  #     https://raw.githubusercontent.com/ican-group/ghc-plinth/ghcup-channel/ghcup-kardan.yaml
+  #   ghcup install kardan <version>
   #
   # The channel lives on its own orphan branch, served straight from
   # raw.githubusercontent.com (which is also where ghcup fetches its own
@@ -858,9 +858,9 @@ jobs:
   # release can take that long to become visible to ghcup.
   #
   # The generator (generate-ghcup-metadata.py) accumulates every released version
-  # into ghcup-plinth.versions.json on that branch and re-emits the channel YAML,
+  # into ghcup-kardan.versions.json on that branch and re-emits the channel YAML,
   # so old versions stay installable. Before publishing, we validate the metadata
-  # end-to-end by installing plinth from a file:// copy of it (real download +
+  # end-to-end by installing kardan from a file:// copy of it (real download +
   # configure + make + symlink), decoupled from the not-yet-public release URLs.
   release:
     name: release / ghcup channel
@@ -868,18 +868,18 @@ jobs:
     # Gate publishing on everything that exercises the bindists: the ghcup
     # install tests and the Plinth test suites, on every platform. Both sets
     # transitively require the build jobs and their uploaded artifacts, so the
-    # builds don't need listing here. Without the plinth-test-* jobs a release
+    # builds don't need listing here. Without the kardan-test-* jobs a release
     # could ship a compiler whose test suite failed.
     needs:
       - release-precheck
-      - plinth-ghcup-test-linux
-      - plinth-ghcup-test-linux-musl
-      - plinth-ghcup-test-windows
-      - plinth-ghcup-test-macos
-      - plinth-test-linux
-      - plinth-test-linux-musl
-      - plinth-test-windows
-      - plinth-test-macos
+      - kardan-ghcup-test-linux
+      - kardan-ghcup-test-linux-musl
+      - kardan-ghcup-test-windows
+      - kardan-ghcup-test-macos
+      - kardan-test-linux
+      - kardan-test-linux-musl
+      - kardan-test-windows
+      - kardan-test-macos
     runs-on: ubuntu-latest
     # Overrides the top-level `contents: read`: this job creates the tag and the
     # Release, and pushes the regenerated channel to the ghcup-channel branch.
@@ -892,12 +892,12 @@ jobs:
         submodules: false
 
     # Collect every platform's bindist tarball into dist/. Each artifact holds a
-    # single ghc-<ver>-<platform>[-musl].tar.xz with a distinct name, so
+    # single kardan-<ver>-<platform>[-musl].tar.xz with a distinct name, so
     # merge-multiple flattens them without collisions.
     - name: Download all bindists
       uses: actions/download-artifact@v4
       with:
-        pattern: plinth-bindist-*
+        pattern: kardan-bindist-*
         path: dist
         merge-multiple: true
 
@@ -909,11 +909,11 @@ jobs:
         # stamped the compiler with the same string (RELEASE_VERSION), so every
         # tarball must be named for it; if not, the channel would advertise a
         # version no bindist provides. See Note [Release versioning] in
-        # plinth-build.sh.
+        # kardan-build.sh.
         VERSION="${REQUESTED_VERSION#v}"
         for f in dist/*.tar.xz; do
           case "$(basename "$f")" in
-            "ghc-$VERSION-"*) ;;
+            "kardan-$VERSION-"*) ;;
             *) echo "error: $f is not a bindist for version $VERSION"; exit 1 ;;
           esac
         done
@@ -921,7 +921,7 @@ jobs:
         echo "TAG=v$VERSION" >> "$GITHUB_ENV"
 
     # The install is already validated end-to-end on every platform by the
-    # plinth-ghcup-test-* jobs this job `needs`, so no re-validation here.
+    # kardan-ghcup-test-* jobs this job `needs`, so no re-validation here.
 
     # Note [Tagging a release]
     # ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -935,7 +935,7 @@ jobs:
         set -eux
         git config user.name "github-actions[bot]"
         git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-        git tag -a "$TAG" -m "uplc-ghc $VERSION" "$GITHUB_SHA"
+        git tag -a "$TAG" -m "Kardan $VERSION" "$GITHUB_SHA"
         git push origin "$TAG"
 
     # Publish the Release with all tarballs. Create it if missing, otherwise
@@ -947,8 +947,8 @@ jobs:
         set -eux
         if ! gh release view "$TAG" >/dev/null 2>&1; then
           gh release create "$TAG" \
-            --title "uplc-ghc $VERSION" \
-            --notes "Plinth standalone compiler (uplc-ghc) bindists for $VERSION. Install via ghcup: see README." \
+            --title "Kardan $VERSION" \
+            --notes "Kardan (Plinth compiler) bindists for $VERSION. Install via ghcup: see README." \
             dist/*.tar.xz
         else
           gh release upload "$TAG" dist/*.tar.xz --clobber
@@ -986,25 +986,25 @@ jobs:
         python3 generate-ghcup-metadata.py \
           --version "$VERSION" \
           --base-url "https://github.com/${GITHUB_REPOSITORY}/releases/download/${TAG}" \
-          --db channel-out/ghcup-plinth.versions.json \
-          --output channel-out/ghcup-plinth.yaml \
+          --db channel-out/ghcup-kardan.versions.json \
+          --output channel-out/ghcup-kardan.yaml \
           --release-day "$(date -u +%Y-%m-%d)" \
           --set-latest \
           dist/*.tar.xz
         cat > channel-out/README.md <<EOF
-        # ghcup channel for the Plinth compiler
+        # ghcup channel for Kardan
 
-        This branch only carries the ghcup metadata for \`uplc-ghc\`; it is not
+        This branch only carries the ghcup metadata for Kardan; it is not
         part of the source tree. Both files are generated by CI on a \`v*\` tag
         (see the \`release\` job in \`.github/workflows/ci.yml\`) -- do not edit
         them by hand.
 
-            ghcup config add-release-channel https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/${CHANNEL_BRANCH}/ghcup-plinth.yaml
-            ghcup install plinth latest
+            ghcup config add-release-channel https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/${CHANNEL_BRANCH}/ghcup-kardan.yaml
+            ghcup install kardan latest
         EOF
         cd channel-out
         git add -A
-        git commit -q -m "ghcup channel: publish plinth ${VERSION} (${TAG})" \
+        git commit -q -m "ghcup channel: publish kardan ${VERSION} (${TAG})" \
           || echo "no changes to commit"
         git push -q origin "HEAD:$CHANNEL_BRANCH"
-        echo "published https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/${CHANNEL_BRANCH}/ghcup-plinth.yaml"
+        echo "published https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/${CHANNEL_BRANCH}/ghcup-kardan.yaml"

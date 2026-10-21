@@ -82,5 +82,5 @@ package sodium-clib
   configure-options: --enable-pie=no
 
 package ghc-bin
-  flags: +plinth +internal-interpreter +threaded
+  flags: +kardan +internal-interpreter +threaded
   executable-static: False

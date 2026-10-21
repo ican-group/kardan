@@ -1,7 +1,7 @@
 name: Prepare Linux build environment
 description: >-
   Free disk space, bind-mount the large /mnt disk as _build, fetch submodules
-  and set up GHC/cabal. Shared by the cabal (build) and plinth-test jobs. The
+  and set up GHC/cabal. Shared by the cabal (build) and kardan-test jobs. The
   repo must already be checked out so the runner can find this local action.
 
 inputs:

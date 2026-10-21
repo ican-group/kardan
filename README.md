@@ -1,11 +1,11 @@
-Plinth Standalone Compiler
-==========================
+Kardan
+======
 
-This is a fork of [GHC][ghc] that embeds the [Plinth][plinth] compiler, used
+Kardan is a fork of [GHC][ghc] that embeds the [Plinth][plinth] compiler, used
 to write smart contracts for the [Cardano][cardano] blockchain. Plinth
 (formerly known as Plutus Tx) is a subset of Haskell compiled to Plutus Core
 via a GHC Core plugin shipped here as a built-in static plugin. The build
-produces `uplc-ghc`, a compiler that installs alongside your normal GHC and
+produces `kardan`, a compiler that installs alongside your normal GHC and
 never replaces it.
 
 Documentation
@@ -15,7 +15,7 @@ The documentation lives on the documentation site:
 
   **<https://ican-group.github.io/ghc-plinth/>**
 
-It covers the installation of `uplc-ghc` (via ghcup), its use in a project,
+It covers the installation of `kardan` (via ghcup), its use in a project,
 the build from source, the tests, and background on how the compiler works.
 
 Making a release

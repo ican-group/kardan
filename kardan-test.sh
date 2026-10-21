@@ -28,11 +28,11 @@ retry() {
 # Note [Plinth compiler test coverage]
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # The example project (plinth/test) is only a smoke test: it checks that
-# uplc-ghc compiles a couple of real validators end-to-end. The thorough
+# kardan compiles a couple of real validators end-to-end. The thorough
 # coverage of the Plinth compiler lives in plutus-tx-plugin's own test-suites
 # (golden PIR/UPLC + evaluation + budget + property + error-message tests) --
 # the same suites upstream CI runs against the external plugin. We run them here
-# under uplc-ghc so the built-in compiler is exercised as thoroughly as the
+# under kardan so the built-in compiler is exercised as thoroughly as the
 # upstream plugin.
 #
 # Expect two kinds of failures until goldens are regenerated for this toolchain:
@@ -66,11 +66,11 @@ case "$UNAME_S" in
 esac
 
 # Default to the in-tree build; override GHC to point at an installed bindist
-# (e.g. the CI test job consumes the bindist produced by `BINDIST=1 plinth-build.sh`).
-: ${GHC:=$PWD/_build/stage1/bin/uplc-ghc${EXE_EXT}}
+# (e.g. the CI test job consumes the bindist produced by `BINDIST=1 kardan-build.sh`).
+: ${GHC:=$PWD/_build/stage1/bin/kardan${EXE_EXT}}
 
 if [ ! -x "$GHC" ]; then
-  echo "Plinth GHC not found ($GHC). Please run plinth-build.sh first."
+  echo "Kardan not found ($GHC). Please run kardan-build.sh first."
   exit 1
 fi
 
@@ -87,7 +87,7 @@ CABAL_PROJECT_ARGS="--project-file=cabal.project"
 
 # Note [Dynamic way on macOS]
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# uplc-ghc forces -fexternal-interpreter (see ghc/Main.hs), so every TH splice
+# Kardan forces -fexternal-interpreter (see ghc/Main.hs), so every TH splice
 # runs in ghc-iserv. In the default (static) way, iserv loads the whole
 # dependency closure with the RTS in-memory linker, which is fragile on
 # aarch64-darwin: plutus-tx-plugin-tests reliably kills it with SIGBUS
@@ -137,11 +137,11 @@ CABAL_BUILD_ARGS="\
     ERR_RC=$?
     set -e
 
-    # Run the Plinth compiler test-suites under uplc-ghc.
+    # Run the Plinth compiler test-suites under kardan.
     # See Note [Plinth compiler test coverage].
     if [ -n "${PLUGIN_TESTS}" ]; then
         echo ""
-        echo "Running Plinth compiler test-suites under uplc-ghc:"
+        echo "Running Plinth compiler test-suites under kardan:"
         echo "  ${PLUGIN_TESTS}"
         echo ""
         # --test-show-details=direct streams tasty's per-test results and golden
@@ -162,21 +162,21 @@ CABAL_BUILD_ARGS="\
         set -e
         echo ""
         if [ $RC -eq 0 ]; then
-            echo "plinth-test: all Plinth compiler tests passed (exit $RC)"
+            echo "kardan-test: all Plinth compiler tests passed (exit $RC)"
         else
-            echo "plinth-test: some Plinth compiler tests failed (exit $RC)"
-            echo "See Note [Plinth compiler test coverage] in plinth-test.sh:"
+            echo "kardan-test: some Plinth compiler tests failed (exit $RC)"
+            echo "See Note [Plinth compiler test coverage] in kardan-test.sh:"
             echo "golden PIR/UPLC diffs are expected codegen drift; real"
             echo "regressions are the non-golden eval/property/trace tests."
         fi
         if [ $ERR_RC -ne 0 ]; then
-            echo "plinth-test: error-message golden tests failed (exit $ERR_RC)"
+            echo "kardan-test: error-message golden tests failed (exit $ERR_RC)"
             exit 1
         fi
         exit $RC
     fi
     if [ $ERR_RC -ne 0 ]; then
-        echo "plinth-test: error-message golden tests failed (exit $ERR_RC)"
+        echo "kardan-test: error-message golden tests failed (exit $ERR_RC)"
         exit 1
     fi
 )

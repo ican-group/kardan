@@ -1,16 +1,16 @@
 #!/usr/bin/env bash
-# Test installing the uplc-ghc (plinth) bindist via *stock* ghcup.
+# Test installing the kardan bindist via *stock* ghcup.
 #
-# uplc-ghc is distributed as a custom third-party ghcup tool named `plinth`,
+# Kardan is distributed as a custom third-party ghcup tool named `kardan`,
 # installable with an unmodified ghcup >= 0.2.1.0 (which introduced the
 # installer DSL for arbitrary tools). This script:
 #   1. generates a ghcup channel metadata file for a locally-available bindist
 #      tarball, with file:// download URLs (via generate-ghcup-metadata.py),
-#   2. installs `plinth` into an isolated ghcup prefix using --url-source,
-#   3. sets it as default and verifies the uplc-* symlinks + a sample compile.
+#   2. installs `kardan` into an isolated ghcup prefix using --url-source,
+#   3. sets it as default and verifies the kardan* symlinks + a sample compile.
 #
 # It needs only a bindist tarball (not a full source tree), so CI jobs can run
-# it against the tarball produced by plinth-build.sh / downloaded as an
+# it against the tarball produced by kardan-build.sh / downloaded as an
 # artifact. Locations are queried from ghcup itself (`whereis`) so it works the
 # same on Linux, macOS and Windows.
 #
@@ -18,12 +18,12 @@
 # python3, and a ghcup >= 0.2.1.0 on PATH (or set GHCUP_BIN).
 #
 # Usage:
-#   ./plinth-ghcup-test.sh
-#   GHCUP_BIN=/path/to/ghcup ./plinth-ghcup-test.sh
-#   VERSION=9.6.7-plinthtest ./plinth-ghcup-test.sh   # override tool version
-#   BINDIST_DIR=_build/artifact ./plinth-ghcup-test.sh
-#   SKIP_CLEANUP=1 ./plinth-ghcup-test.sh             # keep the test env
-#   EXPECT_MUSL=1 ./plinth-ghcup-test.sh              # require a musl bindist
+#   ./kardan-ghcup-test.sh
+#   GHCUP_BIN=/path/to/ghcup ./kardan-ghcup-test.sh
+#   VERSION=9.6.7-kardantest ./kardan-ghcup-test.sh   # override tool version
+#   BINDIST_DIR=_build/artifact ./kardan-ghcup-test.sh
+#   SKIP_CLEANUP=1 ./kardan-ghcup-test.sh             # keep the test env
+#   EXPECT_MUSL=1 ./kardan-ghcup-test.sh              # require a musl bindist
 set -euo pipefail
 
 BASE="$PWD"
@@ -88,10 +88,10 @@ fi
 BINDIST_DIR="$(cd "$BINDIST_DIR" && pwd)"
 
 shopt -s nullglob
-tarballs=("$BINDIST_DIR"/ghc-*.tar.xz)
+tarballs=("$BINDIST_DIR"/kardan-*.tar.xz)
 if [ ${#tarballs[@]} -ne 1 ]; then
     echo "error: expected exactly one bindist tarball in $BINDIST_DIR, found: ${tarballs[*]:-none}"
-    echo "       run 'BINDIST=1 ./plinth-build.sh' first, or set BINDIST_DIR"
+    echo "       run 'BINDIST=1 ./kardan-build.sh' first, or set BINDIST_DIR"
     exit 1
 fi
 TARBALL="${tarballs[0]}"
@@ -99,7 +99,7 @@ TARBALL="${tarballs[0]}"
 # generate-ghcup-metadata.py derives the ghcup platform from the bindist name, so
 # a musl bindist that lost its -musl suffix is published as Linux_UnknownLinux
 # and is then uninstallable on Alpine. See Note [Detecting musl] in
-# plinth-build.sh. Fail here rather than deep inside ghcup.
+# kardan-build.sh. Fail here rather than deep inside ghcup.
 if [ "$EXPECT_MUSL" -eq 1 ]; then
     case "$TARBALL" in
         *-musl.tar.xz) ;;
@@ -115,7 +115,7 @@ fi
 : ${VERSION:=$("$PYTHON" - "$TARBALL" <<'PY'
 import os, re, sys
 b = os.path.basename(sys.argv[1])
-m = re.match(r"ghc-(.+?)-(?:x86_64|amd64|i386|i686|aarch64|arm64|armv7l)-", b)
+m = re.match(r"kardan-(.+?)-(?:x86_64|amd64|i386|i686|aarch64|arm64|armv7l)-", b)
 print(m.group(1) if m else "0.0.0")
 PY
 )}
@@ -128,8 +128,8 @@ echo "  tarball:  $TARBALL"
 ####################################################################
 # generate channel metadata pointing at the local tarball (file:// URLs)
 
-METADATA_FILE="$BINDIST_DIR/ghcup-plinth.yaml"
-DB_FILE="$BINDIST_DIR/ghcup-plinth.versions.json"
+METADATA_FILE="$BINDIST_DIR/ghcup-kardan.yaml"
+DB_FILE="$BINDIST_DIR/ghcup-kardan.versions.json"
 rm -f "$DB_FILE"   # fresh single-version DB for the test
 
 "$PYTHON" "$BASE/generate-ghcup-metadata.py" \
@@ -150,10 +150,10 @@ echo "generated metadata: $METADATA_FILE"
 # ghcup stages an install in a temp dir whose layout repeats the *whole* install
 # path underneath it:
 #
-#   <basedir>/tmp/ghcup-<hash>/<basedir sans drive>/plinth/<ver>/<file>
+#   <basedir>/tmp/ghcup-<hash>/<basedir sans drive>/kardan/<ver>/<file>
 #
 # so every character of GHCUP_INSTALL_BASE_PREFIX is paid for twice. With the
-# prefix under MSYS's /tmp (D:\a\_temp\msys64\tmp\plinth-ghcup-test.XXXXXX) the
+# prefix under MSYS's /tmp (D:\a\_temp\msys64\tmp\kardan-ghcup-test.XXXXXX) the
 # staged path for GHC's deepest library files reached 261 characters -- one over
 # Windows' 260-char MAX_PATH -- and the copy failed with "The system cannot find
 # the path specified". Keep the prefix at the drive root (D:\pgt.XXXXXX) so the
@@ -179,7 +179,7 @@ if [ "$IS_WINDOWS" -eq 1 ]; then
     fi
 fi
 if [ -z "$TEST_DIR" ]; then
-    TEST_DIR=$(mktemp -d "${TMPDIR:-/tmp}/plinth-ghcup-test.XXXXXX")
+    TEST_DIR=$(mktemp -d "${TMPDIR:-/tmp}/kardan-ghcup-test.XXXXXX")
 fi
 
 cleanup() {
@@ -217,24 +217,24 @@ GHCUP=( "$GHCUP_BIN" --url-source "$URL_SOURCE" )
 # shell tests and exec work under msys2.
 BASEDIR=$(from_native "$("$GHCUP_BIN" whereis basedir)")
 BINDIR=$(from_native "$("$GHCUP_BIN" whereis bindir)")
-INSTALL_DIR="$BASEDIR/plinth/$VERSION"
+INSTALL_DIR="$BASEDIR/kardan/$VERSION"
 
 # Capability gate: a ghcup predating the installer DSL (< 0.2.1.0) won't know
-# the custom `plinth` tool. Fail with a clear hint rather than deep in install.
-if ! "${GHCUP[@]}" list -t plinth 2>/dev/null | grep -q plinth; then
+# the custom `kardan` tool. Fail with a clear hint rather than deep in install.
+if ! "${GHCUP[@]}" list -t kardan 2>/dev/null | grep -q kardan; then
     echo "error: this ghcup ($("$GHCUP_BIN" --version)) does not recognize the"
-    echo "       custom 'plinth' tool. The installer DSL needs ghcup >= 0.2.1.0."
+    echo "       custom 'kardan' tool. The installer DSL needs ghcup >= 0.2.1.0."
     exit 1
 fi
 
 echo ""
-echo "=== installing plinth $VERSION ==="
+echo "=== installing kardan $VERSION ==="
 # `pipefail` keeps ghcup's exit status despite the strip_escapes filter.
-"${GHCUP[@]}" install plinth "$VERSION" 2>&1 | strip_escapes
+"${GHCUP[@]}" install kardan "$VERSION" 2>&1 | strip_escapes
 
 echo ""
-echo "=== setting plinth $VERSION as default ==="
-"${GHCUP[@]}" set plinth "$VERSION" 2>&1 | strip_escapes
+echo "=== setting kardan $VERSION as default ==="
+"${GHCUP[@]}" set kardan "$VERSION" 2>&1 | strip_escapes
 
 ####################################################################
 # verify
@@ -250,52 +250,52 @@ check "install dir $INSTALL_DIR" "[ -d '$INSTALL_DIR' ]"
 # generate-ghcup-metadata.py. Test with -e (which follows symlinks) and not -L,
 # so a link ghcup created towards a file the bindist doesn't contain fails here
 # instead of being shipped broken.
-EXPECTED_BINS="uplc-ghc uplc-ghc-pkg"
+EXPECTED_BINS="kardan kardan-pkg"
 for bin in $EXPECTED_BINS; do
     check "$bin-$VERSION" "[ -e '$BINDIR/$bin-$VERSION$EXE_EXT' ]"
     check "$bin (unversioned/set)" "[ -e '$BINDIR/$bin$EXE_EXT' ]"
 done
 
 echo ""
-UPLC_GHC="$BINDIR/uplc-ghc${EXE_EXT}"
+KARDAN="$BINDIR/kardan${EXE_EXT}"
 got=""
-if [ -x "$UPLC_GHC" ]; then
-    got=$("$UPLC_GHC" --numeric-version 2>&1 || true)
-    echo "  OK: uplc-ghc runs (--numeric-version = $got; tool version = $VERSION)"
+if [ -x "$KARDAN" ]; then
+    got=$("$KARDAN" --numeric-version 2>&1 || true)
+    echo "  OK: kardan runs (--numeric-version = $got; tool version = $VERSION)"
 else
-    echo "  FAIL: uplc-ghc not executable at $UPLC_GHC"; ALL_OK=0
+    echo "  FAIL: kardan not executable at $KARDAN"; ALL_OK=0
 fi
 
-# uplc-ghc-pkg must run and report the same version as uplc-ghc: cabal
-# (configured with `with-hc-pkg: uplc-ghc-pkg`) refuses a ghc/ghc-pkg version
+# kardan-pkg must run and report the same version as kardan: cabal
+# (configured with `with-hc-pkg: kardan-pkg`) refuses a ghc/ghc-pkg version
 # mismatch. See Note [Finding ghc-pkg on Windows] in generate-ghcup-metadata.py.
-UPLC_GHC_PKG="$BINDIR/uplc-ghc-pkg${EXE_EXT}"
-if [ -x "$UPLC_GHC_PKG" ]; then
-    pkg_ver=$("$UPLC_GHC_PKG" --version 2>&1 | grep -o '[0-9][0-9.]*$' || true)
+KARDAN_PKG="$BINDIR/kardan-pkg${EXE_EXT}"
+if [ -x "$KARDAN_PKG" ]; then
+    pkg_ver=$("$KARDAN_PKG" --version 2>&1 | grep -o '[0-9][0-9.]*$' || true)
     if [ -n "$got" ] && [ "$pkg_ver" = "$got" ]; then
-        echo "  OK: uplc-ghc-pkg runs and matches uplc-ghc ($pkg_ver)"
+        echo "  OK: kardan-pkg runs and matches kardan ($pkg_ver)"
     else
-        echo "  FAIL: uplc-ghc-pkg version '$pkg_ver' does not match uplc-ghc '$got'"
+        echo "  FAIL: kardan-pkg version '$pkg_ver' does not match kardan '$got'"
         ALL_OK=0
     fi
 else
-    echo "  FAIL: uplc-ghc-pkg not executable at $UPLC_GHC_PKG"; ALL_OK=0
+    echo "  FAIL: kardan-pkg not executable at $KARDAN_PKG"; ALL_OK=0
 fi
 
 ####################################################################
 # compile a tiny sample with the installed compiler
 
 echo ""
-echo "=== compiling a sample module with uplc-ghc ==="
+echo "=== compiling a sample module with kardan ==="
 SAMPLE_DIR="$TEST_DIR/sample"
 mkdir -p "$SAMPLE_DIR"
 cat > "$SAMPLE_DIR/Hello.hs" <<'HS'
 module Main where
 main :: IO ()
-main = putStrLn "hello from uplc-ghc"
+main = putStrLn "hello from kardan"
 HS
-if "$UPLC_GHC" -o "$SAMPLE_DIR/hello${EXE_EXT}" "$SAMPLE_DIR/Hello.hs" >"$SAMPLE_DIR/build.log" 2>&1 \
-   && "$SAMPLE_DIR/hello${EXE_EXT}" | grep -q "hello from uplc-ghc"; then
+if "$KARDAN" -o "$SAMPLE_DIR/hello${EXE_EXT}" "$SAMPLE_DIR/Hello.hs" >"$SAMPLE_DIR/build.log" 2>&1 \
+   && "$SAMPLE_DIR/hello${EXE_EXT}" | grep -q "hello from kardan"; then
     echo "  OK: compiled and ran a sample program"
 else
     echo "  FAIL: sample compile/run failed; see $SAMPLE_DIR/build.log"

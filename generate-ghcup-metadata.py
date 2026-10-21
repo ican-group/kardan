@@ -1,29 +1,29 @@
 #!/usr/bin/env python3
-"""Generate a ghcup release-channel metadata file for the `plinth` tool.
+"""Generate a ghcup release-channel metadata file for the `kardan` tool.
 
-uplc-ghc is distributed as a *custom third-party ghcup tool* named `plinth`
+Kardan is distributed as a *custom third-party ghcup tool* named `kardan`
 (installable with stock ghcup >= 0.2.1.0 -- no ghcup fork). This script turns
 a set of per-platform bindist tarballs into the ghcup channel YAML that users
 add with:
 
-    ghcup config add-release-channel <url>/ghcup-plinth.yaml
-    ghcup install plinth <version>
+    ghcup config add-release-channel <url>/ghcup-kardan.yaml
+    ghcup install kardan <version>
 
 See Note [Ghcup channel metadata] below for the schema rationale.
 
 Usage:
     generate-ghcup-metadata.py \
-        --version 9.6.7-plinth1.66 \
+        --version 9.6.7-kardan1.66 \
         --base-url https://github.com/ican-group/ghc-plinth/releases/download/v1.66 \
-        [--db ghcup-plinth.versions.json] \
-        [--output ghcup-plinth.yaml] \
+        [--db ghcup-kardan.versions.json] \
+        [--output ghcup-kardan.yaml] \
         [--release-day 2026-07-29] [--changelog <url>] \
         [--tags Latest,Recommended] \
         [--set-latest] \
         TARBALL [TARBALL ...]
 
-Each TARBALL is a local `ghc-<ghcver>-<target-platform>[-musl].tar.xz` file (as
-produced by plinth-build.sh). The script reads its name + sha256, records the
+Each TARBALL is a local `kardan-<ghcver>-<target-platform>[-musl].tar.xz` file (as
+produced by kardan-build.sh). The script reads its name + sha256, records the
 version into the JSON accumulator DB, then re-emits the full channel YAML from
 the DB so that every previously released version stays available.
 """
@@ -38,31 +38,31 @@ import sys
 # Note [Ghcup channel metadata]
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # A channel file is a ghcup `GHCupInfo` document: a top-level `ghcupDownloads:`
-# map from tool name to {toolDetails, toolVersions}. `plinth` is a custom tool
+# map from tool name to {toolDetails, toolVersions}. `kardan` is a custom tool
 # (Tool is `newtype Tool String` in ghcup, lowercased), so unlike ghc/cabal it
 # has NO built-in install logic -- we MUST supply a `dlInstallSpec` (the
 # "installer DSL") per platform. For a GHC-shaped bindist we mirror ghcup's own
 # `defaultGHCInstallSpec`:
 #   - Unix: run `./configure --prefix=${PREFIX}` then `make DESTDIR=${TMPDIR} install`
 #   - Windows: copy `bin/**` + data dirs (GHC's Windows bindist is copy-relocatable)
-# then symlink the uplc-* wrappers into ~/.ghcup/bin via `exeSymLinked`.
+# then symlink the kardan* wrappers into ~/.ghcup/bin via `exeSymLinked`.
 # ${PREFIX}/${TMPDIR}/${PKGVER} are ghcup substitution variables.
 
-TOOL_NAME = "plinth"
+TOOL_NAME = "kardan"
 
 TOOL_DETAILS = {
     "toolHomepage": "https://github.com/ican-group/ghc-plinth",
     "toolRepository": "https://github.com/ican-group/ghc-plinth",
-    "toolDescription": "GHC fork that compiles Haskell directly to Plutus Core (uplc-ghc)",
+    "toolDescription": "Kardan: a GHC fork that compiles Plinth (Haskell) directly to Plutus Core",
     "toolAuthor": "IOG",
     "toolLicense": "BSD-3-Clause",
 }
 
 # Note [Finding ghc-pkg on Windows]
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# With `with-compiler: uplc-ghc`, cabal looks for the matching ghc-pkg next to
+# With `with-compiler: kardan`, cabal looks for the matching ghc-pkg next to
 # the *symlink-resolved* compiler path (guessToolFromGhcPath in Cabal). On Unix
-# this works by accident: ~/.ghcup/bin/uplc-ghc is a symlink into the install
+# this works by accident: ~/.ghcup/bin/kardan is a symlink into the install
 # dir, where the correct ghc-pkg sits under its stock name. On Windows ghcup
 # creates shim executables, not symlinks. Cabal cannot see through a shim, so
 # it searches ghcup's bin dir only and picks up ghc-pkg.exe from the user's
@@ -70,27 +70,27 @@ TOOL_DETAILS = {
 # (issue #29).
 #
 # The fix: also link the bindist's ghc-pkg into ghcup's bin dir, under the
-# name `uplc-ghc-pkg` so that it cannot shadow the user's GHC, and point cabal
+# name `kardan-pkg` so that it cannot shadow the user's GHC, and point cabal
 # at it explicitly:
 #
-#     with-compiler: uplc-ghc
-#     with-hc-pkg:   uplc-ghc-pkg
+#     with-compiler: kardan
+#     with-hc-pkg:   kardan-pkg
 
 # The binaries ghcup must link into ~/.ghcup/bin, as (target, link) pairs:
 # `target` is the binary name in the installed bindist's bin/, `link` is the
 # base name of the created links. `setName` is the unversioned link created by
-# `ghcup set plinth <ver>`.
+# `ghcup set kardan <ver>`.
 #
-# Keep this in sync with the fixup in plinth-build.sh and with EXPECTED_BINS in
-# plinth-ghcup-test.sh. Only uplc-prefixed link names are safe: the bindist's
+# Keep this in sync with the fixup in kardan-build.sh and with EXPECTED_BINS in
+# kardan-ghcup-test.sh. Only kardan-prefixed link names are safe: the bindist's
 # other tools (haddock, hsc2hs, hpc, ...) keep their stock names, and linking
 # them under those names would hijack the user's GHC toolchain. Listing a
 # target the bindist does not ship makes ghcup create a *dangling* link, which
 # it does silently.
 LINKED_BINARIES = [
-    ("uplc-ghc", "uplc-ghc"),
+    ("kardan", "kardan"),
     # See Note [Finding ghc-pkg on Windows]
-    ("ghc-pkg", "uplc-ghc-pkg"),
+    ("ghc-pkg", "kardan-pkg"),
 ]
 
 # arch component (first field of the GHC target platform) -> ghcup Architecture
@@ -106,7 +106,7 @@ ARCH_MAP = {
 
 
 def version_key(ver):
-    """A best-effort ordering key for version strings like "9.6.7-plinth1.66".
+    """A best-effort ordering key for version strings like "9.6.7-kardan1.66".
 
     Splits into alternating numeric / non-numeric chunks; numeric chunks compare
     as integers, others lexically. Each chunk is tagged (0/1) so int and str
@@ -129,22 +129,22 @@ def sha256_file(path):
 
 
 def parse_bindist_name(basename):
-    """Parse `ghc-<ghcver>-<target-platform>[-musl].tar.xz`.
+    """Parse `kardan-<ghcver>-<target-platform>[-musl].tar.xz`.
 
     Returns (subdir, ghc_arch, ghcup_arch, ghcup_platform).
     `subdir` is the top-level directory inside the tarball (== name sans .tar.xz),
-    which plinth-build.sh sets to the bindist name.
+    which kardan-build.sh sets to the bindist name.
     """
-    m = re.match(r"^(ghc-.+?)\.tar\.xz$", basename)
+    m = re.match(r"^(kardan-.+?)\.tar\.xz$", basename)
     if not m:
         raise ValueError(f"not a bindist tarball name: {basename}")
-    subdir = m.group(1)  # e.g. ghc-9.6.7-x86_64-unknown-linux-musl
+    subdir = m.group(1)  # e.g. kardan-9.6.7-x86_64-unknown-linux-musl
 
     is_musl = subdir.endswith("-musl")
     core = subdir[: -len("-musl")] if is_musl else subdir
 
-    # core = ghc-<ghcver>-<arch>-<vendor>-<os>[-<abi>]
-    m = re.match(r"^ghc-(?P<ghcver>[^-]+)-(?P<target>.+)$", core)
+    # core = kardan-<ghcver>-<arch>-<vendor>-<os>[-<abi>]
+    m = re.match(r"^kardan-(?P<ghcver>[^-]+)-(?P<target>.+)$", core)
     if not m:
         raise ValueError(f"cannot parse bindist name: {basename}")
     target = m.group("target")  # e.g. x86_64-unknown-linux
@@ -168,7 +168,7 @@ def parse_bindist_name(basename):
 
 def install_spec(ghcup_platform):
     """The installer DSL (dlInstallSpec) for one platform, mirroring
-    ghcup's defaultGHCInstallSpec but symlinking the uplc-* wrappers."""
+    ghcup's defaultGHCInstallSpec but symlinking the kardan* wrappers."""
     exe_ext = ".exe" if ghcup_platform == "Windows" else ""
     exe_symlinked = [
         {
@@ -337,16 +337,16 @@ def render_channel(db):
 
 
 def main(argv=None):
-    p = argparse.ArgumentParser(description="Generate ghcup channel metadata for the plinth tool")
-    p.add_argument("--version", required=True, help="ghcup tool version key, e.g. 9.6.7-plinth1.66")
+    p = argparse.ArgumentParser(description="Generate ghcup channel metadata for the kardan tool")
+    p.add_argument("--version", required=True, help="ghcup tool version key, e.g. 9.6.7-kardan1.66")
     p.add_argument("--base-url", required=True, help="URL prefix the tarballs are published under")
-    p.add_argument("--db", default="ghcup-plinth.versions.json", help="JSON accumulator of all versions")
-    p.add_argument("--output", default="ghcup-plinth.yaml", help="channel YAML to write")
+    p.add_argument("--db", default="ghcup-kardan.versions.json", help="JSON accumulator of all versions")
+    p.add_argument("--output", default="ghcup-kardan.yaml", help="channel YAML to write")
     p.add_argument("--release-day", help="YYYY-MM-DD (optional)")
     p.add_argument("--changelog", help="changelog URL (optional)")
     p.add_argument("--tags", default="", help="comma-separated tags for this version (default: none)")
     p.add_argument("--set-latest", action="store_true", help="mark this version as Latest+Recommended")
-    p.add_argument("tarballs", nargs="+", help="local ghc-*.tar.xz bindist files")
+    p.add_argument("tarballs", nargs="+", help="local kardan-*.tar.xz bindist files")
     args = p.parse_args(argv)
 
     rec = build_version_record(

@@ -13,7 +13,7 @@ RELEASE_HADRIAN_ARGS=""
 DEV_HADRIAN_ARGS="--docs=none"
 # expose_unfoldings: base, ghc-prim and ghc-bignum must have the
 # unfoldings of all their definitions, because the Plinth compiler
-# translates them. uplc-ghc does not compile these libraries, so they do
+# translates them. Kardan does not compile these libraries, so they do
 # not get the INLINABLE pragmas that the Plinth plugin adds.
 RELEASE_FLAVOUR="release+expose_unfoldings"
 # Note [Lean CI flavour]
@@ -42,7 +42,7 @@ DEV_CONFIGURE_ARGS="$DEFAULT_CONFIGURE_ARGS"
 
 : ${REBUILD:=0} # set to 1 to force rebuild
 : ${RELEASE:=0} # set to 1 to build release version including documentation (more build dependencies)
-: ${BINDIST:=0} # set to 1 to produce the fixed-up uplc-ghc bindist + archive while keeping the dev (assertions) flavour
+: ${BINDIST:=0} # set to 1 to produce the fixed-up kardan bindist + archive while keeping the dev (assertions) flavour
 : ${RELEASE_VERSION:=} # set to e.g. 9.6.169.1 to stamp the compiler with exactly that version. See Note [Release versioning]
 
 # program locations
@@ -234,7 +234,7 @@ if [ ! -x ./_build/stage1/bin/ghc ] || [ "$REBUILD" -eq 1 ]; then
   ./hadrian/build -j --flavour=$FLAVOUR $HADRIAN_ARGS binary-dist-dir
 fi
 
-# build Plinth GHC
+# build Kardan
 
 STAGE="stage-plinth"
 BOOT_GHC="$BASE/_build/stage1/bin/ghc"
@@ -276,7 +276,7 @@ if [ "$IS_WINDOWS" -eq 1 ]; then
 fi
 
 (
-    echo "building uplc-ghc"
+    echo "building kardan"
     cd plinth
     echo "cabal update..."
     "$CABAL" ${CABAL_PROJECT_ARGS} ${CABAL_ARGS} update
@@ -284,18 +284,20 @@ fi
     "$CABAL" ${CABAL_PROJECT_ARGS} ${CABAL_ARGS} build ${CABAL_BUILD_ARGS} ghc:ghc
 )
 
-# add uplc-ghc to the _build dir and the bindists
+# add kardan to the _build dir and the bindists
 CWRAPPER_DIR="$BASE/hadrian/bindist/cwrappers"
 
-DEST_UPLC_GHC="$BASE/_build/stage1/bin/uplc-ghc${EXE_EXT}"
+DEST_KARDAN="$BASE/_build/stage1/bin/kardan${EXE_EXT}"
 
 (
     cd plinth
-    SRC_UPLC_GHC=$("$CABAL" ${CABAL_PROJECT_ARGS} ${CABAL_ARGS} list-bin ${CABAL_BUILD_ARGS} ghc:ghc)
-    echo "installing uplc-ghc: $SRC_UPLC_GHC => $DEST_UPLC_GHC"
+    # list-bin may first print the output of a source-repository-package
+    # checkout (e.g. git's "HEAD is now at ...") on stdout: keep the last line.
+    SRC_KARDAN=$("$CABAL" ${CABAL_PROJECT_ARGS} ${CABAL_ARGS} list-bin ${CABAL_BUILD_ARGS} ghc:ghc | tail -n 1)
+    echo "installing kardan: $SRC_KARDAN => $DEST_KARDAN"
 
     # add to build dir (needed for testing, so always done)
-    cp "$SRC_UPLC_GHC" "$DEST_UPLC_GHC"
+    cp "$SRC_KARDAN" "$DEST_KARDAN"
 
     # The bindist fixup below only matters for the shippable bindist, produced
     # for RELEASE=1 (release flavour + docs) or BINDIST=1 (current flavour, e.g.
@@ -307,32 +309,32 @@ DEST_UPLC_GHC="$BASE/_build/stage1/bin/uplc-ghc${EXE_EXT}"
     fi
 
     # fixup the bindist:
-    #  - add uplc-ghc with the static Plinth plugin
-    #  - remove boot GHC, since we don't want the UPLC GHC to replace the user's GHC
+    #  - add kardan with the static Plinth plugin
+    #  - remove boot GHC, since we don't want Kardan to replace the user's GHC
     for dir in "$BASE"/_build/bindist/*; do
         if [ -d "$dir" ]; then
-            echo "adding uplc-ghc to bindist: $dir"
+            echo "adding kardan to bindist: $dir"
             if [ "$IS_WINDOWS" -eq 1 ]; then
                 # Windows: copy versioned .exe and compile a C wrapper
-                cp "$SRC_UPLC_GHC" "$dir/bin/uplc-ghc-$VERSION.exe"
+                cp "$SRC_KARDAN" "$dir/bin/kardan-$VERSION.exe"
                 "$BOOT_GHC" -no-hs-main \
-                    -o "$dir/bin/uplc-ghc.exe" \
+                    -o "$dir/bin/kardan.exe" \
                     "-I$CWRAPPER_DIR" \
-                    "-DEXE_PATH=\"uplc-ghc-$VERSION.exe\"" \
+                    "-DEXE_PATH=\"kardan-$VERSION.exe\"" \
                     "-DINTERACTIVE_PROCESS=0" \
                     "$CWRAPPER_DIR/version-wrapper.c" \
                     "$CWRAPPER_DIR/getLocation.c" \
                     "$CWRAPPER_DIR/cwrapper.c"
             else
                 # Unix: copy versioned binary and symlink
-                cp "$SRC_UPLC_GHC" "$dir/bin/uplc-ghc-$VERSION"
-                ( cd "$dir/bin" && ln -sf "uplc-ghc-$VERSION" "uplc-ghc" )
+                cp "$SRC_KARDAN" "$dir/bin/kardan-$VERSION"
+                ( cd "$dir/bin" && ln -sf "kardan-$VERSION" "kardan" )
             fi
 
-            # Add wrapper scripts so `make install` creates $PREFIX/bin/uplc-ghc
+            # Add wrapper scripts so `make install` creates $PREFIX/bin/kardan
             mkdir -p "$dir/wrappers"
-            echo 'exec "$executablename" -B"$libdir" ${1+"$@"}' > "$dir/wrappers/uplc-ghc-$VERSION"
-            ( cd "$dir/wrappers" && ln -sf "uplc-ghc-$VERSION" "uplc-ghc" )
+            echo 'exec "$executablename" -B"$libdir" ${1+"$@"}' > "$dir/wrappers/kardan-$VERSION"
+            ( cd "$dir/wrappers" && ln -sf "kardan-$VERSION" "kardan" )
 
             # remove the boot GHC from the bindist
             rm -f "$dir"/bin/ghc
@@ -340,8 +342,8 @@ DEST_UPLC_GHC="$BASE/_build/stage1/bin/uplc-ghc${EXE_EXT}"
             rm -f "$dir"/bin/ghc-$VERSION
             rm -f "$dir"/bin/ghc-$VERSION.exe
             # rename runhaskell/runghc
-            mv -f "$dir"/bin/runhaskell "$dir"/bin/uplc-runhaskell 2>/dev/null || true
-            mv -f "$dir"/bin/runghc "$dir"/bin/uplc-runghc 2>/dev/null || true
+            mv -f "$dir"/bin/runhaskell "$dir"/bin/kardan-runhaskell 2>/dev/null || true
+            mv -f "$dir"/bin/runghc "$dir"/bin/kardan-runghc 2>/dev/null || true
             # XXX wrappers on Windows, other tools like unlit need to be renamed?
         fi
     done
@@ -358,7 +360,7 @@ DEST_UPLC_GHC="$BASE/_build/stage1/bin/uplc-ghc${EXE_EXT}"
 # A missing -musl suffix is not cosmetic: generate-ghcup-metadata.py derives the
 # ghcup platform from the bindist name, so the musl bindist was published as
 # Linux_UnknownLinux. ghcup deliberately does not fall back from Alpine to
-# UnknownLinux (a glibc bindist cannot run on musl), so `ghcup install plinth`
+# UnknownLinux (a glibc bindist cannot run on musl), so `ghcup install kardan`
 # failed on Alpine with "Unable to find a download". The two bindists would also
 # collide under the same file name in the GitHub Release.
 #
@@ -382,16 +384,15 @@ if [ "$RELEASE" -eq 1 ] || [ "$BINDIST" -eq 1 ]; then
             case "$ldd_out" in *musl*) LIBC_SUFFIX="-musl" ;; esac
             ;;
     esac
-    # hadrian's binary-dist-dir names the directory after the target platform
-    # only, so rename it to carry the suffix rather than just naming the archive:
-    # the tarball's top-level directory has to match the archive name, since
-    # that is what generate-ghcup-metadata.py records as ghcup's dlSubdir.
+    # hadrian's binary-dist-dir names the directory ghc-<ver>-<platform>, so
+    # rename it to kardan-<ver>-<platform>[-musl] rather than just naming the
+    # archive: the tarball's top-level directory has to match the archive name,
+    # since that is what generate-ghcup-metadata.py records as ghcup's dlSubdir.
     # Guarded on the source existing so re-running over an already-renamed
     # bindist keeps it instead of deleting it.
     HADRIAN_BINDIST="ghc-$VERSION-$TARGET_PLATFORM"
-    BINDIST_NAME="${HADRIAN_BINDIST}${LIBC_SUFFIX}"
-    if [ "$BINDIST_NAME" != "$HADRIAN_BINDIST" ] \
-       && [ -d "$BASE/_build/bindist/$HADRIAN_BINDIST" ]; then
+    BINDIST_NAME="kardan-$VERSION-$TARGET_PLATFORM${LIBC_SUFFIX}"
+    if [ -d "$BASE/_build/bindist/$HADRIAN_BINDIST" ]; then
         rm -rf "$BASE/_build/bindist/$BINDIST_NAME"
         mv "$BASE/_build/bindist/$HADRIAN_BINDIST" "$BASE/_build/bindist/$BINDIST_NAME"
     fi

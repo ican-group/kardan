@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Run plutus-benchmark test-suites with our uplc-ghc and report diffs
+# Run plutus-benchmark test-suites with our kardan and report diffs
 # against the golden files committed under plutus/plutus-benchmark/*/test/9.6.
 #
 # Each test-suite is a tasty runner. When a golden comparison fails,
@@ -13,16 +13,16 @@
 set -euo pipefail
 
 BASE=$PWD
-UPLC_GHC="$BASE/_build/stage1/bin/uplc-ghc"
+KARDAN="$BASE/_build/stage1/bin/kardan"
 PROJECT_DIR="$BASE/plinth/coop-test"
 BENCH_DIR="$BASE/plutus/plutus-benchmark"
 TARGET_PKG="plutus-benchmark"
 
 : ${CABAL:=$(command -v cabal 2>/dev/null || true)}
 
-if [ ! -x "$UPLC_GHC" ]; then
-  echo "uplc-ghc not found at $UPLC_GHC"
-  echo "run ./plinth-build.sh first"
+if [ ! -x "$KARDAN" ]; then
+  echo "kardan not found at $KARDAN"
+  echo "run ./kardan-build.sh first"
   exit 1
 fi
 if [ -z "$CABAL" ] || [ ! -x "$CABAL" ]; then
@@ -47,9 +47,9 @@ cd "$PROJECT_DIR"
 echo "cabal update..."
 "$CABAL" "${CABAL_ARGS[@]}" update
 
-echo "building $TARGET_PKG:tests with uplc-ghc..."
+echo "building $TARGET_PKG:tests with kardan..."
 "$CABAL" "${CABAL_ARGS[@]}" build -j \
-  -w "$UPLC_GHC" \
+  -w "$KARDAN" \
   --ghc-options=-fhide-source-paths \
   "$TARGET_PKG:tests"
 
@@ -62,7 +62,7 @@ echo ""
 # -j1 keeps output readable.
 set +e
 "$CABAL" "${CABAL_ARGS[@]}" test -j1 \
-  -w "$UPLC_GHC" \
+  -w "$KARDAN" \
   --keep-going \
   --test-show-details=direct \
   "$TARGET_PKG"
@@ -71,9 +71,9 @@ set -e
 
 echo ""
 if [ $RC -eq 0 ]; then
-  echo "plinth-bench: all $TARGET_PKG tests matched golden (exit $RC)"
+  echo "kardan-bench: all $TARGET_PKG tests matched golden (exit $RC)"
 else
-  echo "plinth-bench: some $TARGET_PKG tests differ from golden (exit $RC)"
+  echo "kardan-bench: some $TARGET_PKG tests differ from golden (exit $RC)"
   echo "see diffs above, or inspect .actual sidecar files under:"
   echo "  $BENCH_DIR/*/test/"
   actuals=$(find "$BENCH_DIR" -name '*.actual' 2>/dev/null)

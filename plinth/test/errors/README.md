@@ -1,7 +1,7 @@
 # Plinth error-message golden tests
 
 This directory holds golden tests for the compile-time error messages
-of the Plinth compiler (uplc-ghc). Each file in `cases/` uses one
+of the Plinth compiler (kardan). Each file in `cases/` uses one
 Haskell construct that Plinth does not support. The runner compiles
 each case, expects the compilation to fail, and compares the compiler
 output with the golden file in `golden/`.
@@ -14,17 +14,17 @@ golden diffs here.
 ## Usage
 
 ```
-# run (after plinth-build.sh and the plinth/test build):
+# run (after kardan-build.sh and the plinth/test build):
 ./run-error-tests.sh
 
 # update the golden files:
 ACCEPT=1 ./run-error-tests.sh
 
 # use a different compiler:
-GHC=/path/to/uplc-ghc ./run-error-tests.sh
+GHC=/path/to/kardan ./run-error-tests.sh
 ```
 
-`plinth-test.sh` runs this suite automatically.
+`kardan-test.sh` runs this suite automatically.
 
 All cases compile with `preserve-source-locations` enabled, because
 the goal of this suite is to track how much source-location
@@ -109,7 +109,7 @@ When you fix one of these, update the golden files.
    dictionary methods like `$fShowInteger_$cshow`, `IS`/`IP`
    constructors), which does not resemble the user's source code.
 
-3. The markers are injected into every module that uplc-ghc compiles,
+3. The markers are injected into every module that kardan compiles,
    including off-chain code, where the OPAQUE identity wrappers can
    block GHC optimizations. Evaluate gating the injection on modules
    that contain Plinth code, or stripping the markers with a cheap
