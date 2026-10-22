@@ -4,7 +4,7 @@ permalink: /tutorials/first-smart-contract/
 ---
 Before writing a real validator, it helps to get the whole toolchain working
 end to end with the simplest possible Plinth program: a function that adds two
-numbers. In this tutorial you will install `kardan`, create a tiny project
+numbers. In this tutorial you will install `plinthc`, create a tiny project
 from scratch, compile it, run it, and read the Plutus Core it produced.
 
 This tutorial targets **Linux and macOS**; the steps are the same on both.
@@ -23,26 +23,26 @@ You need on `PATH`:
   already.
 
 The rest of the tutorial assumes the compiler is available as plain
-`kardan`, which is what step 1 gives you. If you
-[built it from source]({% link how-to/build.md %}) instead, replace `kardan`
+`plinthc`, which is what step 1 gives you. If you
+[built it from source]({% link how-to/build.md %}) instead, replace `plinthc`
 with the path of the binary the build produced.
 
 ## Step 1: Install Plinth
 
-`kardan` is distributed via ghcup as a custom tool named `kardan` (see
-[Install Kardan]({% link how-to/install.md %}) for the
-details). Add the Kardan release channel, then install and activate the tool:
+`plinthc` is distributed via ghcup as a custom tool named `plinthc` (see
+[Install plinthc]({% link how-to/install.md %}) for the
+details). Add the plinthc release channel, then install and activate the tool:
 
 ```console
-$ ghcup config add-release-channel https://raw.githubusercontent.com/ican-group/kardan/ghcup-channel/ghcup-kardan.yaml
-$ ghcup install kardan 9.6.169.4
-$ ghcup set kardan 9.6.169.4
+$ ghcup config add-release-channel https://raw.githubusercontent.com/ican-group/plinthc/ghcup-channel/ghcup-plinthc.yaml
+$ ghcup install plinthc 9.6.169.4
+$ ghcup set plinthc 9.6.169.4
 ```
 
 Check that the compiler is on `PATH`:
 
 ```console
-$ kardan --version
+$ plinthc --version
 ```
 
 If you have already installed 9.6.169.4 this way, skip to step 2.
@@ -51,8 +51,8 @@ If you have already installed 9.6.169.4 this way, skip to step 2.
 
 Make a new directory and add the three files below.
 
-**`cabal.project`** wires up the build. It points cabal at `kardan`
-9.6.169.4 and its `ghc-pkg` (installed by ghcup as `kardan-pkg-9.6.169.4`,
+**`cabal.project`** wires up the build. It points cabal at `plinthc`
+9.6.169.4 and its `ghc-pkg` (installed by ghcup as `plinthc-pkg-9.6.169.4`,
 so that it does not collide with your regular GHC); pulls the
 Plinth libraries (`plutus-tx`, `plutus-core`) from the
 `ghc-plinth-plutus` fork the compiler was built against; uses the Cardano
@@ -61,10 +61,10 @@ crypto C libraries (`libsodium`, `secp256k1`, `blst`) from source via the
 `*-clib` blocks, so you do not need them installed on your system:
 
 ```haskell
--- The Kardan release. The ghc-plinth-plutus tag below must be the commit
+-- The plinthc release. The ghc-plinth-plutus tag below must be the commit
 -- that this release is built from.
-with-compiler: kardan-9.6.169.4
-with-hc-pkg:   kardan-pkg-9.6.169.4
+with-compiler: plinthc-9.6.169.4
+with-hc-pkg:   plinthc-pkg-9.6.169.4
 
 packages: .
 
@@ -83,12 +83,12 @@ index-state:
   , hackage.haskell.org 2026-08-06T04:37:23Z
   , cardano-haskell-packages 2026-08-05T05:00:53Z
 
--- The Plinth libraries, from the fork kardan was built against. The
--- compiler itself is built into kardan, so plutus-tx-plugin is not needed.
+-- The Plinth libraries, from the fork plinthc was built against. The
+-- compiler itself is built into plinthc, so plutus-tx-plugin is not needed.
 source-repository-package
   type: git
   location: https://github.com/ican-group/ghc-plinth-plutus
-  tag: 896a89d6a13bff4a905b9c0f29f9e350e99785a4
+  tag: 6b85da890a3e34cd9fe0e5e7c5a43d0801144634
   subdir: plutus-tx
           plutus-core
 
@@ -129,13 +129,13 @@ package sodium-clib
   configure-options: --enable-pie=no
 ```
 
-Use the `ghc-plinth-plutus` commit that matches your `kardan`: the compiler and
+Use the `ghc-plinth-plutus` commit that matches your `plinthc`: the compiler and
 these libraries are released together as a matched set, built from the same
 commit. The commit above matches release 9.6.169.4, the release in
 `with-compiler`. To use a different release, change `with-compiler`,
 `with-hc-pkg` and this `tag` together. The commit of a release is the `plutus`
 submodule of its tag (`v<version>`) in
-[kardan](https://github.com/ican-group/kardan).
+[plinthc](https://github.com/ican-group/plinthc).
 
 **Not for production.** The vendored crypto C libraries pulled in by the
 `*-clib` `source-repository-package`s above have not been audited. Use this
@@ -223,7 +223,7 @@ $ cabal build
 
 The first run clones and builds the Plinth libraries and the crypto C libraries
 from source, so expect it to take a while. Because the Plinth plugin is built
-into `kardan`, no extra plugin configuration is required: the `compile` splice
+into `plinthc`, no extra plugin configuration is required: the `compile` splice
 is translated to Plutus Core as part of the normal build.
 
 ## Step 4: Run it
@@ -251,14 +251,14 @@ That is the [UPLC]({% link explanation/uplc.md %}) your two-line Haskell functio
 compiled to &mdash; the `+` became the `addInteger` builtin, wrapped in a
 `program` with its [language version]({% link explanation/uplc.md %}). This is
 exactly the kind of code the Cardano ledger executes, produced from Haskell by
-`kardan`.
+`plinthc`.
 
 ## Where to go next
 
 - [Lock and unlock funds on a local chain]({% link tutorials/lock-and-unlock.md %})
   &mdash; the next tutorial: write a real validator, deploy it on a local
   Cardano network, and spend from it with `cardano-cli`.
-- [Use kardan in a project]({% link how-to/use.md %}) &mdash; the same compiler
+- [Use plinthc in a project]({% link how-to/use.md %}) &mdash; the same compiler
   setup, described on its own.
 - [The Plinth contract language]({% link explanation/plinth-language.md %})
   &mdash; how a real validator is written, beyond this toy function.

@@ -1,18 +1,18 @@
 ---
-title: Build Kardan from source
+title: Build plinthc from source
 permalink: /how-to/build/
 ---
 This guide explains how to build
-[Kardan]({% link explanation/standalone-compiler.md %}) (`kardan`)
+[plinthc]({% link explanation/standalone-compiler.md %}) (`plinthc`)
 from source. Most users do not need this: the recommended way to get
-`kardan` is to
+`plinthc` is to
 [install a released binary via ghcup]({% link how-to/install.md %}). Build
 from source when you work on the compiler itself, or when no binary
 distribution covers your platform.
 
 ## Prerequisites
 
-`kardan-build.sh` expects the following tools on `PATH`:
+`plinthc-build.sh` expects the following tools on `PATH`:
 
 | Tool      | Requirement                                          |
 | --------- | ---------------------------------------------------- |
@@ -31,14 +31,14 @@ found, so they are effectively optional. The others must be present.
 
 The compiler sources come from two submodules, so clone recursively:
 
-| Submodule | Repository                     | Branch         | Provides                                                |
-| --------- | ------------------------------ | -------------- | ------------------------------------------------------- |
-| `ghc`     | `ican-group/ghc-plinth`        | `kardan-9.6.7` | GHC 9.6.7 with the Kardan patches                       |
-| `plutus`  | `ican-group/ghc-plinth-plutus` | `kardan-1.69`  | `plutus-tx`, `plutus-tx-plugin` and `plutus-core` 1.69 |
+| Submodule | Repository                     | Branch          | Provides                                               |
+| --------- | ------------------------------ | --------------- | ------------------------------------------------------ |
+| `ghc`     | `ican-group/ghc-plinth`        | `plinthc-9.6.7` | GHC 9.6.7 with the plinthc patches                     |
+| `plutus`  | `ican-group/ghc-plinth-plutus` | `plinthc-1.69`  | `plutus-tx`, `plutus-tx-plugin` and `plutus-core` 1.69 |
 
 
 ```console
-$ git clone --recurse-submodules git@github.com:ican-group/kardan.git
+$ git clone --recurse-submodules git@github.com:ican-group/plinthc.git
 ```
 
 If you already cloned without `--recurse-submodules`, fetch them with:
@@ -52,20 +52,20 @@ $ git submodule update --init --recursive
 From the root of the repository:
 
 ```console
-$ ./kardan-build.sh
+$ ./plinthc-build.sh
 ```
 
-The script bootstraps GHC in `ghc/` and then builds `kardan`. What it produces is
+The script bootstraps GHC in `ghc/` and then builds `plinthc`. What it produces is
 described under [Build outputs](#build-outputs) below.
 
 ## Build options
 
-`kardan-build.sh` is controlled by environment variables. The two most common
+`plinthc-build.sh` is controlled by environment variables. The two most common
 force a full rebuild or select the release flavour:
 
 ```console
-$ REBUILD=1 ./kardan-build.sh   # re-boot, re-configure, and rebuild from scratch
-$ RELEASE=1 ./kardan-build.sh   # release flavour, which also builds documentation
+$ REBUILD=1 ./plinthc-build.sh   # re-boot, re-configure, and rebuild from scratch
+$ RELEASE=1 ./plinthc-build.sh   # release flavour, which also builds documentation
 ```
 
 | Variable  | Default | Effect                                                        |
@@ -80,60 +80,60 @@ flavour.
 
 ## Build outputs
 
-When `kardan-build.sh` finishes it has produced two things.
+When `plinthc-build.sh` finishes it has produced two things.
 
 **The compiler.** The development build is installed at:
 
 ```
-ghc/_build/stage1/bin/kardan
+ghc/_build/stage1/bin/plinthc
 ```
 
 This is the binary you point cabal at (see
-[Use kardan in a project]({% link how-to/use.md %})).
+[Use plinthc in a project]({% link how-to/use.md %})).
 
 **Binary distribution archive.** With `RELEASE=1` or `BINDIST=1`, a
 relocatable bindist is produced under `ghc/_build/bindist/`:
 
 ```
-ghc/_build/bindist/kardan-<version>-<platform>.tar.xz
+ghc/_build/bindist/plinthc-<version>-<platform>.tar.xz
 ```
 
-The build script fixes up the bindist so that it ships `kardan` (with the
+The build script fixes up the bindist so that it ships `plinthc` (with the
 built-in Plinth plugin) instead of the boot GHC:
 
-- `kardan` is added (as `kardan-<version>` plus a `kardan` wrapper).
+- `plinthc` is added (as `plinthc-<version>` plus a `plinthc` wrapper).
 - The boot `ghc` binary is removed, so installing the bindist does not replace
   a user's existing GHC.
-- `runghc` and `runhaskell` are renamed to `kardan-runghc` and `kardan-runhaskell`.
+- `runghc` and `runhaskell` are renamed to `plinthc-runghc` and `plinthc-runhaskell`.
 
-Installing the bindist therefore creates `$PREFIX/bin/kardan`.
+Installing the bindist therefore creates `$PREFIX/bin/plinthc`.
 
 ## Test and benchmark
 
-With `kardan` built, two scripts exercise it. Both run from the root of the
+With `plinthc` built, two scripts exercise it. Both run from the root of the
 repository.
 
 ### Run the example project tests
 
 ```console
-$ ./kardan-test.sh
+$ ./plinthc-test.sh
 ```
 
-It builds the example Plinth project under `plinth/test/` with `kardan` and
+It builds the example Plinth project under `plinth/test/` with `plinthc` and
 regenerates its expected outputs. Set `CLEAN=1` to force a clean rebuild:
 
 ```console
-$ CLEAN=1 ./kardan-test.sh
+$ CLEAN=1 ./plinthc-test.sh
 ```
 
 ### Run the benchmarks
 
-`kardan-bench.sh` builds and runs the `plutus-benchmark` test-suites with
-`kardan` and reports any diffs against the golden files committed under
+`plinthc-bench.sh` builds and runs the `plutus-benchmark` test-suites with
+`plinthc` and reports any diffs against the golden files committed under
 `plutus/plutus-benchmark/` (it requires the `plutus` submodule):
 
 ```console
-$ ./kardan-bench.sh
+$ ./plinthc-bench.sh
 ```
 
 Each test-suite is a [tasty](https://hackage.haskell.org/package/tasty) runner.

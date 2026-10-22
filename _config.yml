@@ -1,4 +1,4 @@
-title: Kardan
+title: plinthc
 description: A GHC-based compiler that compiles Plinth (Plutus Tx) to Plutus Core.
 
 remote_theme: kitian616/jekyll-TeXt-theme

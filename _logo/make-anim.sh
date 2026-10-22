@@ -1,37 +1,37 @@
 #!/usr/bin/env bash
 # Render the animated wordmark and assemble it for the site.
 #
-#   ./make-anim.sh            render 80 frames at 2124x700, encode the clip
+#   ./make-anim.sh            render 80 frames at 2172x700, encode the clip
 #   ./make-anim.sh --draft    quarter size, no antialiasing, ~30s, for timing
 #   ./make-anim.sh --encode   re-encode the frames already in frames/, no render
 #   ./make-anim.sh --check    verify the tail is still and matches the still PNG
 #
-# Output: ../assets/images/kardan-wordmark.webm, a VP9 clip that plays once and
-# stops on a frame identical to the committed kardan-wordmark.png. See
-# Note [The last frame is the still] in kardan-anim.pov for why that matters,
+# Output: ../assets/images/plinthc-wordmark.webm, a VP9 clip that plays once and
+# stops on a frame identical to the committed plinthc-wordmark.png. See
+# Note [The last frame is the still] in plinthc-anim.pov for why that matters,
 # and index.md for how the two are served together.
 set -euo pipefail
 
 cd "$(dirname "$0")"
 
 FRAMES=frames
-STILL=../assets/images/kardan-wordmark.png
-OUT=../assets/images/kardan-wordmark.webm
-MP4=../assets/images/kardan-wordmark.mp4
-POSTER=../assets/images/kardan-wordmark-poster.webp
-WIDE=1416          # delivered width, same as the still
+STILL=../assets/images/plinthc-wordmark.png
+OUT=../assets/images/plinthc-wordmark.webm
+MP4=../assets/images/plinthc-wordmark.mp4
+POSTER=../assets/images/plinthc-wordmark-poster.webp
+WIDE=1448          # delivered width, same as the still
 FPS=30
 LAST=80            # keep in step with Final_Frame in anim.ini
 
 # Note [Downsampling does double duty]
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Rendering at 2124 and resampling to 1416 sharpens the bevel edges, as it does
+# Rendering at 2172 and resampling to 1448 sharpens the bevel edges, as it does
 # for the still -- but in an animation it also halves the frame-to-frame noise
 # from the jittered area lights and the radiosity sampling, which is what would
 # otherwise show up as a faint shimmer on the floor. Measured on two frames that
 # should be identical: 0.13% mean difference before resampling, well under half
 # of that after. Not worth touching the light rig for (and Note [Hitting the
-# brand colour] in kardan-common.inc says not to).
+# brand colour] in plinthc-common.inc says not to).
 mode=${1:-}
 
 case "$mode" in
@@ -57,7 +57,7 @@ case "$mode" in
         { echo "  FAIL: still moving at frame $b" >&2; exit 1; }
     done
     # -resize before both filenames applies to both as they are read, so this
-    # compares the 2124-wide frame against the 1416-wide still on equal terms.
+    # compares the 2172-wide frame against the 1448-wide still on equal terms.
     d=$( { magick compare -metric RMSE -resize ${WIDE}x "$FRAMES/f$LAST.png" "$STILL" null: 2>&1 || true; } |
           sed 's/.*(\(.*\))/\1/')
     echo "frame $LAST vs $(basename $STILL): $d"
@@ -67,9 +67,9 @@ case "$mode" in
     exit 0
     ;;
   --draft)
-    render=(povray anim.ini +W531 +H175 -A +Q5)
+    render=(povray anim.ini +W543 +H175 -A +Q5)
     OUT=draft.webm
-    WIDE=531
+    WIDE=543
     ;;
   --encode)
     # Retuning the encoder is the thing you do repeatedly; re-rendering 80
@@ -102,11 +102,11 @@ fi
 # crf 16, because it has a deblocking filter and rate control built for exactly
 # this. Lossless WebP would do it in 12M.
 #
-# Odd heights are fine for VP9, so the frame is 1416x467 -- the same size as
+# Odd heights are fine for VP9, so the frame is 1448x467 -- the same size as
 # the still, which is the poster.
 #
 # No -loop: a <video> stops on its last frame, which is the whole design (see
-# Note [The last frame is the still] in kardan-anim.pov). That frame is then on
+# Note [The last frame is the still] in plinthc-anim.pov). That frame is then on
 # screen indefinitely, so -force_key_frames codes it as a keyframe rather than
 # the tail of a 79-frame delta chain. Costs about 20K.
 ffmpeg -nostdin -loglevel error -y \

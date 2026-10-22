@@ -22,7 +22,7 @@ On Cardano this shape has three parts:
   Yours is the guess.
 
 You will write the validator in Plinth (about twenty lines), compile it with
-`kardan`, and package it in the file format Cardano tools use. Then, on a
+`plinthc`, and package it in the file format Cardano tools use. Then, on a
 private Cardano network running on your machine, you will:
 
 1. compute the validator's **script address** and send 10 test ada to it,
@@ -42,7 +42,7 @@ This tutorial targets **Linux**.
 You need:
 
 - the setup from the
-  [first tutorial]({% link tutorials/first-smart-contract.md %}): `kardan`
+  [first tutorial]({% link tutorials/first-smart-contract.md %}): `plinthc`
   and `cabal` on `PATH`;
 - [Docker](https://docs.docker.com/engine/install/) with the Compose plugin,
   installed and running (check with `docker compose version` and
@@ -65,10 +65,10 @@ ledger types (`ScriptContext`, `Datum`, ...) and the script serialisation
 helpers:
 
 ```haskell
--- The Kardan release. The ghc-plinth-plutus tag below must be the commit
+-- The plinthc release. The ghc-plinth-plutus tag below must be the commit
 -- that this release is built from.
-with-compiler: kardan-9.6.169.4
-with-hc-pkg:   kardan-pkg-9.6.169.4
+with-compiler: plinthc-9.6.169.4
+with-hc-pkg:   plinthc-pkg-9.6.169.4
 
 packages: .
 
@@ -87,12 +87,12 @@ index-state:
   , hackage.haskell.org 2026-08-06T04:37:23Z
   , cardano-haskell-packages 2026-08-05T05:00:53Z
 
--- The Plinth libraries, from the fork kardan was built against. The
--- compiler itself is built into kardan, so plutus-tx-plugin is not needed.
+-- The Plinth libraries, from the fork plinthc was built against. The
+-- compiler itself is built into plinthc, so plutus-tx-plugin is not needed.
 source-repository-package
   type: git
   location: https://github.com/ican-group/ghc-plinth-plutus
-  tag: 896a89d6a13bff4a905b9c0f29f9e350e99785a4
+  tag: 6b85da890a3e34cd9fe0e5e7c5a43d0801144634
   subdir: plutus-tx
           plutus-core
           plutus-ledger-api
@@ -134,7 +134,7 @@ package sodium-clib
   configure-options: --enable-pie=no
 ```
 
-Use the `ghc-plinth-plutus` commit that matches your `kardan`, as in the
+Use the `ghc-plinth-plutus` commit that matches your `plinthc`, as in the
 first tutorial.
 
 **Not for production.** The vendored crypto C libraries pulled in by the

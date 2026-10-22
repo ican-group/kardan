@@ -256,7 +256,7 @@ Error: Reference to a name which is not a local, a builtin, or an external funct
 ```
 
 The compiler translates the GHC Core definition (the "unfolding") of every
-function the compiled code references. Kardan keeps the unfoldings of all
+function the compiled code references. plinthc keeps the unfoldings of all
 definitions without `INLINEABLE` pragmas, except when a `NOINLINE` or `OPAQUE`
 pragma hides the definition &mdash; see
 [Unfoldings and `INLINEABLE`]({% link explanation/plinth-language.md %}#unfoldings-and-inlineable).

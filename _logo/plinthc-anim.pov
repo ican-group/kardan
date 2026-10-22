@@ -1,7 +1,7 @@
 // ---------------------------------------------------------------------------
-// Kardan wordmark, animated -- the letters drop onto the studio floor one by
-// one and settle, and the camera eases back to the exact framing of the
-// committed still. Plays once.
+// plinthc wordmark, animated -- the letters drop onto the studio floor and
+// settle, the plinth-shaped I lands last, and the camera eases back to the
+// exact framing of the committed still. Plays once.
 //
 // Render (from this directory):
 //   ./make-anim.sh
@@ -12,39 +12,44 @@
 // Note [The last frame is the still]
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Every animated quantity reaches its final value before clock = 1 and holds:
-// the last letter is at rest at 0.86 and the camera arrives at CamEase. The tail is
-// therefore a run of identical frames matching kardan-logo.pov, which is what
-// lets index.md offer the committed assets/images/kardan-wordmark.png as the
+// the last letter lands at 0.82 and the camera arrives at CamEase. The tail is
+// therefore a run of identical frames matching plinthc-logo.pov, which is what
+// lets index.md offer the committed assets/images/plinthc-wordmark.png as the
 // reduced-motion alternative without a visible jump. Anything added here must
 // keep that property -- `./make-anim.sh --check` tests it.
 //
 // Options (add on the command line):
-//   Declare=Theme=1   white letters on a dark ground
+//   Declare=Motif=0   plain letters instead of the plinth-shaped I
+//   Declare=Theme=1   white letters on a dark ground, coral plinth
 // ---------------------------------------------------------------------------
 
-#include "kardan-common.inc"
+#include "plinthc-common.inc"
 
 // ---------------------------------------------------------------------------
 // Note [Timeline]
 // ~~~~~~~~~~~~~~~
 // clock runs 0 -> 1 over the whole animation. Each letter gets a slot, and the
-// slots are staggered by Stag, so the word assembles left to right:
+// slots are staggered by Stag, so the word assembles left to right except for
+// the plinth, which is dealt the last slot however wide the word is:
 //
-//   K  |####----------------|
-//   A    |####--------------|
-//   R      |####------------|
-//   D        |####----------|
-//   A          |####--------|
-//   N            |####------|
+//   P  |####----------------|
+//   L    |####--------------|
+//   N      |####------------|
+//   T        |####----------|
+//   H          |####--------|
+//   C            |####------|
+//   I              |######--|      <- slower, and no bounce
 //                          ^ everything at rest from here to clock 1
 //
-// The numbers put the last landing at clock 0.75 and the end of its bounce at
-// 0.86 (5 * Stag + (PhF + PhB) * Dur): late enough that the drops are not
-// rushed, early enough to leave a still tail of about a third of a second
-// after the camera arrives at CamEase (see Note [The last frame is the still]).
+// The numbers put the last landing at clock 0.82: late enough that the drops
+// are not rushed, early enough to leave half a second of still tail (see
+// Note [The last frame is the still]).
 // ---------------------------------------------------------------------------
-#declare Stag    = 0.095;   // clock between one letter landing and the next
+#declare Stag    = 0.080;   // clock between one letter landing and the next
+                            // (0.095 for the six letters of PLINTH: one more
+                            // letter, the same last landing)
 #declare Dur     = 0.42;    // one letter's whole drop, in clock
+#declare DurCol  = 0.52;    // the plinth takes longer -- it is heavier
 #declare CamEase = 0.88;    // camera has arrived by this point on the clock
 
 // Note [Hiding a letter before it falls]
@@ -82,6 +87,8 @@
 #declare PhF  = 0.66;       // fraction of a slot spent falling
 #declare PhB  = 0.26;       // ... then bouncing; the rest is rest
 
+// Landing slot per glyph. The I is index 2 and takes the last slot.
+#declare Slot = array[NC] { 0, 1, 6, 2, 3, 4, 5 }
 
 // ---------------------------------------------------------------------------
 // Per glyph, at this clock: On, whether it is in the scene at all, and Dy, its
@@ -92,8 +99,10 @@
 
 #declare i = 0;
 #while (i < NC)
-  #declare Rel = i * Stag;                          // when this glyph is let go
-  #declare pu  = (clock - Rel) / Dur;
+  #declare Col = (Motif = 1 & i = 2);
+  #declare Len = (Col ? DurCol : Dur);
+  #declare Rel = Slot[i] * Stag;                    // when this glyph is let go
+  #declare pu  = (clock - Rel) / Len;
 
   // ">= 0" and not "> 0": at clock 0 the first glyph is released rather than
   // withheld, which keeps the union from being empty on the opening frame.
@@ -113,8 +122,8 @@
       #declare pw    = pu / PhF;
       #declare Dy[i] = Drop * (1 - (Push * pw + (1 - Push) * pw * pw));
     #else
-      #if (pu >= PhF + PhB)
-        #declare Dy[i] = 0;
+      #if (Col | pu >= PhF + PhB)
+        #declare Dy[i] = 0;       // the plinth does not bounce
       #else
         #declare pv    = (pu - PhF) / PhB;
         #declare Dy[i] = Drop * Bnc * 4 * pv * (1 - pv);
@@ -125,7 +134,7 @@
 #end
 
 // ---------------------------------------------------------------------------
-// The word -- same construction as kardan-logo.pov, plus Dy per glyph.
+// The word -- same construction as plinthc-logo.pov, plus Dy per glyph.
 //
 // Dy is applied after the texture, so each glyph's vertical colour gradient
 // rides along with it and a falling letter looks exactly like a landed one.
@@ -137,12 +146,21 @@ union {
   #declare i = 0;
   #while (i < NC)
     #if (On[i] = 1)
-      object {
-        Beveled(Chars[i])
-        translate x * (Cur + Wid[i] / 2)
-        texture { T_Letter }
-        translate y * Dy[i]
-      }
+      #if (Motif = 1 & i = 2)
+        object {
+          PlinthColumn(ColW, Thick, 1)
+          translate x * (Cur + Wid[2] / 2)
+          texture { T_Column }
+          translate y * Dy[2]
+        }
+      #else
+        object {
+          Beveled(Chars[i])
+          translate x * (Cur + Wid[i] / 2)
+          texture { T_Letter }
+          translate y * Dy[i]
+        }
+      #end
     #end
     #declare Cur = Cur + Wid[i] + Trk;
     #declare i = i + 1;
@@ -175,7 +193,7 @@ camera {
   location < 0.0, 6.00 + 1.30 * (1 - e), -29.5 - 3.20 * (1 - e)>
   look_at  < 0.0, 1.15 + 0.22 * (1 - e),   0.0>
   right    x * image_width / image_height
-  angle    FrameAngle(19 + 2.2 * (1 - e))   // see Note [Framing by height]
+  angle FrameAngle(19 + 2.2 * (1 - e))   // see Note [Framing by height]
 }
 
 object { Word }

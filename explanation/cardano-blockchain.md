@@ -119,7 +119,7 @@ Cardano ledger actually executes.
 
 - [How smart contracts run: Plutus Core and the CEK machine]({% link explanation/plutus-core.md %})
   &mdash; what validators are compiled to, and how the ledger evaluates them.
-- [Kardan]({% link explanation/standalone-compiler.md %})
+- [plinthc]({% link explanation/standalone-compiler.md %})
 - [The Extended UTXO Model][eutxo-paper] &mdash; the paper formalising the EUTXO
   model that Cardano is built on.
 - [Cardano][cardano]

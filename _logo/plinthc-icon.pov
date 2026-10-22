@@ -1,28 +1,42 @@
 // ---------------------------------------------------------------------------
-// Kardan icon -- the K of the wordmark, alone on a flat brand tile, lit by the
-// same rig. Square frames only. Feed the render to make-icons.py, which rounds
-// the corners and cuts the favicon sizes.
+// plinthc icon -- the plinth-shaped I from the wordmark, alone on a flat brand
+// tile, lit by the same rig. Square frames only. Feed the render to
+// make-icons.py, which rounds the corners and cuts the favicon sizes.
 //
 // Render:
-//   povray +Ikardan-icon.pov +Okardan-icon.png +W1024 +H1024 +A0.2 +AM2 +R4 +Q11
+//   povray +Iplinthc-icon.pov +Oplinthc-icon.png +W1024 +H1024 +A0.2 +AM2 +R4 +Q11
 //
 // Options (add on the command line):
-//   Declare=Theme=1   coral K on a charcoal tile
+//   Declare=Theme=1   coral plinth on a charcoal tile
+//   Declare=Fine=1    keep the wordmark's slim transition mouldings
 // ---------------------------------------------------------------------------
 
-#include "kardan-common.inc"
+#include "plinthc-common.inc"
+
+#ifndef (Fine)
+  #declare Fine = 0;    // see Note [Chunky for the small sizes]
+#end
+
+// Note [Chunky for the small sizes]
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// The icon plinth is wider and its shaft thicker than the one standing in the
+// wordmark, because it no longer has to pass as a capital I in a line of text.
+// These are roughly the proportions of the existing flat mark, and they are
+// what survives being resampled down to 16 pixels.
+#declare IconW = 0.72;    // em, against a height of CapH (~0.72 em)
+#declare IconD = 0.42;
 
 // Note [Flat albedo for the icon]
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // The wordmark's ceramic darkens towards the base of each letter, which at 16
-// pixels turns the foot of the K into a grey smudge and costs the mark its
+// pixels turns the plinth's base slab into a grey smudge and costs the mark its
 // silhouette. The icon uses one flat albedo instead and lets the lighting do
 // all of the shading.
-#declare T_Icon = Ceramic(C_Mark, C_Mark, 0.42)
+#declare T_Icon = Ceramic(C_Col, C_Col, 0.42)
 
 #declare Icon =
 object {
-  Beveled("K")
+  PlinthColumn(IconW, IconD, Fine)
   texture { T_Icon }
   interior { ior 1.5 }
   scale Scl
@@ -51,7 +65,7 @@ plane {
 
 // Note [The dark tile runs a little dark]
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// On the charcoal tile the coral K renders #e5494a against the brand
+// On the charcoal tile the coral plinth renders #e5494a against the brand
 // #fc4d50: right hue, ~9% short on red. The albedo is already at full red (see
 // Note [Hitting the brand colour]) and the emissive tile gives back no bounce,
 // so the only lever left is a hotter key -- which clips red instead of raising
@@ -63,8 +77,8 @@ StudioLights(0.35)
 
 camera {
   perspective
-  // Only 5 degrees of elevation: any more and the top faces of the K turn into
-  // a tabletop and the mark stops reading as a flat letter.
+  // Only 5 degrees of elevation: any more and the top of the cap turns into a
+  // tabletop and the mark stops reading as a letter I.
   location <0, IconH * 0.5 + 1.05, -11.70>
   // Aimed a hair below the middle of the mark: looking slightly down makes it
   // sit high in the frame otherwise, and an icon has to be optically centred.
@@ -74,12 +88,12 @@ camera {
   // "angle" is measured against the right vector, so its effect shifts with
   // the aspect ratio (the wordmark had to be tuned by eye). Giving right, up
   // and direction explicitly makes the field exact instead: the half-angle is
-  // atan(0.5 / |direction|), so 4.96 covers 2.36 units at this distance, which
-  // leaves the 1.65-unit K filling 70% of the tile: big enough to hold up at 16
-  // pixels, with enough margin around the letter for it to read as a K.
+  // atan(0.5 / |direction|), so 5.44 covers 2.15 units at this distance, which
+  // leaves the 1.72-unit plinth filling 80% of the tile -- as much of it as the
+  // existing flat mark fills, which is what makes it hold up at 16 pixels.
   right     x
   up        y
-  direction z * 4.96
+  direction z * 5.44
 }
 
 object { Icon }

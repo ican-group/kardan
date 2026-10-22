@@ -21,14 +21,14 @@ package repository (CHaP), code is organised into modules, a library, and
 executables or test suites, and `cabal build` builds it.
 
 The single tweak is the compiler. Instead of stock GHC you build with
-`kardan`, most conveniently by setting it once in `cabal.project`:
+`plinthc`, most conveniently by setting it once in `cabal.project`:
 
 ```
-with-compiler: /path/to/kardan
+with-compiler: /path/to/plinthc
 packages: .
 ```
 
-This is the persistent equivalent of passing `cabal -w /path/to/kardan` on the
+This is the persistent equivalent of passing `cabal -w /path/to/plinthc` on the
 command line.
 
 ## On-chain and off-chain in one project
@@ -143,8 +143,8 @@ executables are the off-chain half consuming them.
   script reaches a transaction.
 - [Contract blueprints (CIP-57)]({% link explanation/blueprints.md %}) &mdash;
   what the off-chain blueprint generators emit.
-- [Kardan]({% link explanation/standalone-compiler.md %})
-  &mdash; why building with `kardan` needs no plugin configuration.
+- [plinthc]({% link explanation/standalone-compiler.md %})
+  &mdash; why building with `plinthc` needs no plugin configuration.
 - [Your first smart contract with Plinth]({% link tutorials/first-smart-contract.md %})
   &mdash; the same template, built step by step.
 - [The Plinth contract language]({% link explanation/plinth-language.md %})
