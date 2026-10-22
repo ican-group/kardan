@@ -1,0 +1,7 @@
+GadtExtension.hs:15:1: error: [PLINTH-00004]
+    Plinth Compilation Error:
+    Context: Compiling definition at GadtExtension.hs:15:1-4: code
+    Error: Unsupported feature: Following extensions are not supported: GADTs
+   |
+15 | code = $$(PlutusTx.compile [|| eval ||])
+   | ^^^^

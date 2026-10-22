@@ -1,0 +1,81 @@
+IntegerPatternMatch.hs:8:1: error: [PLINTH-00004]
+    Plinth Compilation Error:
+    Context: Compiling definition at IntegerPatternMatch.hs:8:1-8: IntegerPatternMatch.isAnswer
+    Context: Compiling code:
+             \ (ds :: GHC.Num.Integer.Integer) ->
+               case ds of ds { __DEFAULT ->
+               case case ds of {
+                      GHC.Num.Integer.IS x ->
+                        case x of {
+                          __DEFAULT -> 0#;
+                          42# -> 1#
+                        };
+                      GHC.Num.Integer.IP _ -> 0#;
+                      GHC.Num.Integer.IN _ -> 0#
+                    }
+               of {
+                 __DEFAULT -> GHC.Types.False;
+                 1# -> GHC.Types.True
+               }
+               }
+    Context: Compiling code:
+             case ds of ds { __DEFAULT ->
+             case case ds of {
+                    GHC.Num.Integer.IS x ->
+                      case x of {
+                        __DEFAULT -> 0#;
+                        42# -> 1#
+                      };
+                    GHC.Num.Integer.IP _ -> 0#;
+                    GHC.Num.Integer.IN _ -> 0#
+                  }
+             of {
+               __DEFAULT -> GHC.Types.False;
+               1# -> GHC.Types.True
+             }
+             }
+    Context: Compiling code:
+             case case ds of {
+                    GHC.Num.Integer.IS x ->
+                      case x of {
+                        __DEFAULT -> 0#;
+                        42# -> 1#
+                      };
+                    GHC.Num.Integer.IP _ -> 0#;
+                    GHC.Num.Integer.IN _ -> 0#
+                  }
+             of {
+               __DEFAULT -> GHC.Types.False;
+               1# -> GHC.Types.True
+             }
+    Context: Compiling code:
+             case ds of {
+               GHC.Num.Integer.IS x ->
+                 case x of {
+                   __DEFAULT -> 0#;
+                   42# -> 1#
+                 };
+               GHC.Num.Integer.IP _ -> 0#;
+               GHC.Num.Integer.IN _ -> 0#
+             }
+    Context: Creating instantiated matcher for type: GHC.Num.Integer.Integer
+    Error: Unsupported feature: Cannot pattern match on a value of type 'Integer'.
+    
+           This usually happens when pattern matching on an integer literal,
+           for example:
+    
+             f 42 = ...
+             f n  = ...
+    
+           Plinth does not support pattern matching on 'Integer'. Use equality
+           from 'PlutusTx.Prelude' instead, for example:
+    
+             import PlutusTx.Prelude ((==))
+    
+             f n | n == 42   = ...
+                 | otherwise = ...
+    
+           Note: GHC can generate these unexpectedly, you may need '-fno-strictness', '-fno-specialise', '-fno-spec-constr', '-fno-unbox-strict-fields', or '-fno-unbox-small-strict-fields'.
+  |
+8 | isAnswer 42 = True
+  | ^^^^^^^^

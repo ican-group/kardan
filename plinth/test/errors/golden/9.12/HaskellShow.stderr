@@ -1,0 +1,8 @@
+HaskellShow.hs:9:10: error: [PLINTH-00004]
+    Plinth Compilation Error:
+    Context: Compiling code at HaskellShow.hs:9:10-61:
+             GHC.Internal.Show.$fShowInteger_$cshow
+    Error: Unsupported feature: GHC.Internal.Show.Show.show, use PlutusTx.Show.Show
+  |
+9 | code = $$(PlutusTx.compile [|| \x -> show (x :: Integer) ||])
+  |          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

@@ -1,0 +1,11 @@
+TypeByteString.hs:10:1: error: [PLINTH-00004]
+    Plinth Compilation Error:
+    Context: Compiling definition at TypeByteString.hs:10:1-4: code
+    Context: Compiling code:
+             \ (x :: Data.ByteString.Internal.Type.ByteString) ->
+               case x of x { Data.ByteString.Internal.Type.BS _ _ _ -> x }
+    Context: Compiling type: Data.ByteString.Internal.Type.ByteString
+    Error: Unsupported feature: Type Data.ByteString.Internal.Type.ByteString is not supported in Plinth; use BuiltinByteString instead
+   |
+10 | code = $$(PlutusTx.compile [|| \x -> x ||])
+   | ^^^^

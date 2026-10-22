@@ -1,0 +1,13 @@
+IOAction.hs:8:10: error: [PLINTH-00004]
+    Plinth Compilation Error:
+    Context: Compiling code at IOAction.hs:8:10-54:
+             (GHC.Internal.Base.$fApplicativeIO5 @())
+             `cast` <Co:6> :: GHC.Types.Coercible
+                                (()
+                                 -> GHC.Prim.State# GHC.Prim.RealWorld
+                                 -> (# GHC.Prim.State# GHC.Prim.RealWorld, () #))
+                                (() -> GHC.Types.IO ())
+    Error: Unsupported feature: IO actions are not supported in Plinth
+  |
+8 | code = $$(PlutusTx.compile [|| return () :: IO () ||])
+  |          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

@@ -1,0 +1,25 @@
+ToBuiltinUsed.hs:10:10: error: [PLINTH-00004]
+    Plinth Compilation Error:
+    Context: Compiling code at ToBuiltinUsed.hs:10:10-54:
+             PlutusTx.Builtins.HasBuiltin.$fHasToBuiltinInteger1
+             `cast` <Co:12> :: GHC.Types.Coercible
+                                 (GHC.Num.Integer.Integer
+                                  -> PlutusTx.Builtins.Internal.BuiltinInteger)
+                                 (GHC.Num.Integer.Integer
+                                  -> PlutusTx.Builtins.Internal.BuiltinInteger)
+    Context: Compiling code:
+             PlutusTx.Builtins.HasBuiltin.$fHasToBuiltinInteger1
+    Context: Compiling definition: PlutusTx.Builtins.HasBuiltin.$fHasToBuiltinInteger1
+    Context: Compiling code:
+             PlutusTx.Builtins.HasBuiltin.useToOpaque
+               @(GHC.Num.Integer.Integer -> GHC.Num.Integer.Integer)
+               (GHC.Internal.Base.id @GHC.Num.Integer.Integer)
+    Context: Compiling code:
+             PlutusTx.Builtins.HasBuiltin.useToOpaque
+               @(GHC.Num.Integer.Integer -> GHC.Num.Integer.Integer)
+    Context: Compiling code:
+             PlutusTx.Builtins.HasBuiltin.useToOpaque
+    Error: Unsupported feature: It is no longer possible to use 'toBuiltin' with a script, use 'toOpaque' instead
+   |
+10 | code = $$(PlutusTx.compile [|| Builtins.toBuiltin ||])
+   |          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
