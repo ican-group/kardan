@@ -28,7 +28,7 @@ a small set of patches:
 | Path      | Repository                     | Branch          | Upstream base           |
 |-----------|--------------------------------|-----------------|-------------------------|
 | `ghc/`    | `ican-group/ghc-plinth`        | `plinthc-9.6.7` | GHC `ghc-9.6.7-release` |
-| `plutus/` | `ican-group/ghc-plinth-plutus` | `plinthc-1.69`  | plutus `1.69.0.0`       |
+| `plutus/` | `ican-group/ghc-plinth-plutus` | `plinthc-1.70`  | plutus `1.70.0.0`       |
 
 Get the sources with `git clone --recursive`, or run
 `git submodule update --init --recursive` after the clone. Then:
@@ -41,7 +41,7 @@ To update to a new Plinth (plutus) release:
 1. In the plutus fork, put the plinthc patches on the new release as a new
    `plinthc-1.NN` branch.
 2. In the GHC fork, set the third version component in `configure.ac` to the
-   new Plinth version (e.g. 1.70 -> `9.6.170`). See the note in that file.
+   new Plinth version (e.g. 1.71 -> `9.6.171`). See the note in that file.
 3. Here, bump both gitlinks and the `plutus-*` bounds in
    `plinth/test/plinth-test.cabal`. Then mirror upstream's solver settings in
    `plinth/cabal.project` and `plinth/test/cabal.project`.

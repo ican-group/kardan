@@ -5,4 +5,4 @@
 [submodule "plutus"]
 	path = plutus
 	url = https://github.com/ican-group/ghc-plinth-plutus.git
-	branch = plinthc-1.69
+	branch = plinthc-1.70
