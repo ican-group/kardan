@@ -4,7 +4,8 @@ This directory holds golden tests for the compile-time error messages
 of the Plinth compiler (plinthc). Each file in `cases/` uses one
 Haskell construct that Plinth does not support. The runner compiles
 each case, expects the compilation to fail, and compares the compiler
-output with the golden file in `golden/`.
+output with the golden file in `golden/<GHC major.minor>/` (e.g.
+`golden/9.12/`).
 
 The plutus-tx-plugin test-suites only test the `defer-errors` path,
 which drops source locations and source snippets. These tests capture

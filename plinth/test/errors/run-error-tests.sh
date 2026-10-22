@@ -6,7 +6,9 @@
 # Each cases/<Name>.hs uses one Haskell construct that Plinth does not
 # support. This script compiles each case with plinthc, expects the
 # compilation to fail, and compares the normalized compiler output with
-# golden/<Name>.stderr.
+# golden/<GHC major.minor>/<Name>.stderr (e.g. golden/9.12/): the Core in the
+# Context frames and some module names (GHC.Internal.* since GHC 9.10)
+# depend on the GHC version.
 #
 # The plutus-tx-plugin golden tests only cover the defer-errors path,
 # which drops the source location and the source snippet. These tests
@@ -38,7 +40,12 @@ if [ ! -x "$GHC" ]; then
 fi
 
 VERSION=$("$GHC" --numeric-version)
-STORE_DB="$TEST_ROOT/_build/store/ghc-$VERSION-plinthc/package.db"
+GHC_SERIES=$(echo "$VERSION" | cut -d. -f1-2)
+GOLDEN_DIR="$HERE/golden/$GHC_SERIES"
+# cabal names the store directory after the compiler's "Project Unit Id":
+# ghc-<ver>-plinthc with GHC 9.6, ghc-<ver>-inplace-plinthc with GHC 9.12.
+UNIT_ID=$("$GHC" --info | sed -n 's/.*("Project Unit Id","\([^"]*\)").*/\1/p')
+STORE_DB="$TEST_ROOT/_build/store/$UNIT_ID/package.db"
 INPLACE_DB="$TEST_ROOT/_build/build/packagedb/ghc-$VERSION"
 
 for db in "$STORE_DB" "$INPLACE_DB"; do
@@ -48,6 +55,11 @@ for db in "$STORE_DB" "$INPLACE_DB"; do
     exit 2
   fi
 done
+
+# The unit id of the plutus-tx library itself. Since GHC 9.10, its public
+# sublibrary plutus-tx-testlib is also listed under the package name
+# plutus-tx, so "-package plutus-tx" can pick the sublibrary instead.
+PLUTUS_TX_ID=$(cd "$INPLACE_DB" && ls plutus-tx-[0-9]*-inplace.conf | sed 's/\.conf$//')
 
 OUTDIR=$(mktemp -d)
 trap 'rm -rf "$OUTDIR"' EXIT
@@ -61,7 +73,7 @@ GHC_ARGS=(
   -package-db "$INPLACE_DB"
   -hide-all-packages
   -package base
-  -package plutus-tx
+  -package-id "$PLUTUS_TX_ID"
   -package text
   -package bytestring
   -fplugin-opt "Plinth.Plugin:target-version=1.1.0"
@@ -101,7 +113,7 @@ for case_file in *.hs; do
     *Helper.hs) continue ;;
   esac
   name=${case_file%.hs}
-  golden="$HERE/golden/$name.stderr"
+  golden="$GOLDEN_DIR/$name.stderr"
   total=$((total + 1))
 
   actual_raw=$("$GHC" --make "${GHC_ARGS[@]}" -outputdir "$OUTDIR/$name" \
@@ -117,6 +129,7 @@ for case_file in *.hs; do
   actual=$(printf '%s\n' "$actual_raw" | normalize)
 
   if [ "$ACCEPT" -eq 1 ]; then
+    mkdir -p "$GOLDEN_DIR"
     printf '%s\n' "$actual" > "$golden"
     echo "ACCEPT $name"
     continue

@@ -1,0 +1,10 @@
+IrreducibleTypeFamily.hs:11:1: error: [PLINTH-00004]
+    Plinth Compilation Error:
+    Context: Compiling definition at IrreducibleTypeFamily.hs:11:1-8: IrreducibleTypeFamily.identity
+    Context: Compiling type: IrreducibleTypeFamily.F GHC.Num.Integer.Integer
+                             -> IrreducibleTypeFamily.F GHC.Num.Integer.Integer
+    Context: Compiling type: IrreducibleTypeFamily.F GHC.Num.Integer.Integer
+    Error: Unsupported feature: Irreducible type family application: IrreducibleTypeFamily.F
+   |
+11 | identity x = x
+   | ^^^^^^^^
