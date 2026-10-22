@@ -1,7 +1,7 @@
 [submodule "ghc"]
 	path = ghc
 	url = https://github.com/ican-group/ghc-plinth.git
-	branch = plinthc-9.6.7
+	branch = plinthc-9.12.4
 [submodule "plutus"]
 	path = plutus
 	url = https://github.com/ican-group/ghc-plinth-plutus.git

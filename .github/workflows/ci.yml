@@ -4,7 +4,7 @@ on:
   pull_request:
     types: [opened, synchronize]
   push:
-    branches: [master]
+    branches: [master, ghc-9.12]
   # Releases are cut from here: run the workflow with a release_version to build
   # and test that version, and tick `publish` to have the release job tag it and
   # publish it once everything has passed. See Note [ghcup release channel].
