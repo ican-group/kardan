@@ -1,0 +1,4 @@
+# LF everywhere, on every platform. The scripts and the golden files of the
+# tests (e.g. plinth/test/errors/golden/) must keep LF on a Windows checkout:
+# the tests compare them byte for byte with the compiler output.
+* text=auto eol=lf
