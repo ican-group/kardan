@@ -25,10 +25,10 @@ optional-packages:
   ../../plutus/plutus-tx
   ../../plutus/plutus-core
   ../../plutus/plutus-ledger-api
-  -- plutus-tx-plugin is here only so kardan-test.sh can build and run its
-  -- test-suites (the canonical Plinth compiler tests) under kardan. The
+  -- plutus-tx-plugin is here only so plinthc-test.sh can build and run its
+  -- test-suites (the canonical Plinth compiler tests) under plinthc. The
   -- example project below does not depend on it; the compiler is built into
-  -- kardan. plutus-metatheory is a transitive dependency of plutus-tx-plugin.
+  -- plinthc. plutus-metatheory is a transitive dependency of plutus-tx-plugin.
   ../../plutus/plutus-tx-plugin
   ../../plutus/plutus-metatheory
 

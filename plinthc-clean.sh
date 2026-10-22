@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Clean all build directories created by kardan-build.sh
+# Clean all build directories created by plinthc-build.sh
 #
 # Usage:
-#   ./kardan-clean.sh          # clean everything
-#   ./kardan-clean.sh plinth   # clean only the plinth (cabal) build
-#   ./kardan-clean.sh ghc      # clean only the GHC (hadrian) build
-#   ./kardan-clean.sh tools    # clean only locally built tools (happy, alex)
+#   ./plinthc-clean.sh          # clean everything
+#   ./plinthc-clean.sh plinth   # clean only the plinth (cabal) build
+#   ./plinthc-clean.sh ghc      # clean only the GHC (hadrian) build
+#   ./plinthc-clean.sh tools    # clean only locally built tools (happy, alex)
 
 what="${1:-all}"
 

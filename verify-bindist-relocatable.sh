@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Verify that the Kardan bindist tarball is relocatable:
+# Verify that the plinthc bindist tarball is relocatable:
 #   - Can be installed to any --prefix
 #   - Works after the build directory is removed
 #
@@ -16,8 +16,8 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$SCRIPT_DIR"
 
-PREFIX_A="${PREFIX_A:-/tmp/kardan-reloctest-alpha/usr/local}"
-PREFIX_B="${PREFIX_B:-/tmp/kardan-reloctest-beta/opt/kardan}"
+PREFIX_A="${PREFIX_A:-/tmp/plinthc-reloctest-alpha/usr/local}"
+PREFIX_B="${PREFIX_B:-/tmp/plinthc-reloctest-beta/opt/plinthc}"
 RUN_PLINTH_TEST="${RUN_PLINTH_TEST:-1}"
 CLEANUP="${CLEANUP:-1}"
 # don't clean by default
@@ -52,7 +52,7 @@ check() {
 
 cleanup() {
     if [ "$CLEANUP" -eq 1 ]; then
-        rm -rf /tmp/kardan-reloctest-alpha /tmp/kardan-reloctest-beta
+        rm -rf /tmp/plinthc-reloctest-alpha /tmp/plinthc-reloctest-beta
         for d in "${EXTRACT_DIRS[@]}"; do
             rm -rf "$d"
         done
@@ -65,16 +65,16 @@ trap cleanup EXIT
 
 find_tarball() {
     local tarballs
-    tarballs=("$REPO_ROOT"/ghc/_build/bindist/kardan-*-*.tar.xz)
+    tarballs=("$REPO_ROOT"/ghc/_build/bindist/plinthc-*-*.tar.xz)
     if [ ${#tarballs[@]} -eq 0 ] || [ ! -f "${tarballs[0]}" ]; then
         echo "ERROR: No bindist tarball found in ghc/_build/bindist/"
-        echo "Run kardan-build.sh first."
+        echo "Run plinthc-build.sh first."
         exit 1
     fi
     TARBALL="${tarballs[0]}"
     TARBALL_BASENAME="$(basename "$TARBALL" .tar.xz)"
-    # Extract version from directory name pattern: kardan-VERSION-PLATFORM
-    VERSION="$(echo "$TARBALL_BASENAME" | sed 's/^kardan-\(.*\)-[^-]*-[^-]*-[^-]*$/\1/')"
+    # Extract version from directory name pattern: plinthc-VERSION-PLATFORM
+    VERSION="$(echo "$TARBALL_BASENAME" | sed 's/^plinthc-\(.*\)-[^-]*-[^-]*-[^-]*$/\1/')"
     echo "Found tarball: $TARBALL"
     echo "  Version: $VERSION"
     echo "  Basename: $TARBALL_BASENAME"
@@ -86,7 +86,7 @@ install_bindist() {
     local prefix="$1"
     local tarball="$2"
     local extract_dir
-    extract_dir="$(mktemp -d /tmp/kardan-reloctest-extract-XXXXXX)"
+    extract_dir="$(mktemp -d /tmp/plinthc-reloctest-extract-XXXXXX)"
     EXTRACT_DIRS+=("$extract_dir")
 
     echo ""
@@ -115,7 +115,7 @@ verify_installation() {
     local ghclibdir="$prefix/lib/ghc-$VERSION"
 
     # 1. Binaries exist
-    for bin in kardan ghc-pkg hsc2hs; do
+    for bin in plinthc ghc-pkg hsc2hs; do
         if [ -f "$prefix/bin/$bin" ] || [ -L "$prefix/bin/$bin" ]; then
             pass "$bin exists in bin/"
         else
@@ -123,35 +123,35 @@ verify_installation() {
         fi
     done
 
-    # ghc wrapper may exist but should be non-functional (kardan-build.sh removes the real binary)
+    # ghc wrapper may exist but should be non-functional (plinthc-build.sh removes the real binary)
     if [ -f "$prefix/bin/ghc" ] || [ -L "$prefix/bin/ghc" ]; then
         echo "  WARN: ghc wrapper exists in bin/ (leftover from install process, points to removed binary)"
     else
         pass "ghc correctly absent from bin/"
     fi
 
-    # 2. kardan --version
+    # 2. plinthc --version
     local ver_output
-    if ver_output=$("$prefix/bin/kardan" --version 2>&1); then
+    if ver_output=$("$prefix/bin/plinthc" --version 2>&1); then
         if echo "$ver_output" | grep -q "$VERSION"; then
-            pass "kardan --version reports $VERSION"
+            pass "plinthc --version reports $VERSION"
         else
-            fail "kardan --version output doesn't contain $VERSION: $ver_output"
+            fail "plinthc --version output doesn't contain $VERSION: $ver_output"
         fi
     else
-        fail "kardan --version failed"
+        fail "plinthc --version failed"
     fi
 
     # 3. Basic eval
     local eval_output
-    if eval_output=$("$prefix/bin/kardan" -e 'putStrLn "hello"' 2>&1); then
+    if eval_output=$("$prefix/bin/plinthc" -e 'putStrLn "hello"' 2>&1); then
         if [ "$eval_output" = "hello" ]; then
-            pass "kardan -e 'putStrLn \"hello\"' works"
+            pass "plinthc -e 'putStrLn \"hello\"' works"
         else
-            fail "kardan -e produced unexpected output: $eval_output"
+            fail "plinthc -e produced unexpected output: $eval_output"
         fi
     else
-        fail "kardan -e failed: $eval_output"
+        fail "plinthc -e failed: $eval_output"
     fi
 
     # 4. Package DB check
@@ -291,7 +291,7 @@ run_plinth_test() {
     echo ""
     echo "=== Running plinth test suite: $label ($prefix) ==="
 
-    local ghc="$prefix/bin/kardan"
+    local ghc="$prefix/bin/plinthc"
     local cabal_project_args="--project-file=cabal.project"
     local cabal_args="--remote-repo-cache _build/packages --store-dir=_build/store-reloctest-$suffix --logs-dir=_build/logs-reloctest-$suffix"
     local cabal_build_args="-j -w $ghc --builddir=_build/build-reloctest-$suffix"
@@ -317,14 +317,14 @@ run_plinth_test() {
 
 main() {
     echo "============================================"
-    echo " Kardan Bindist Relocatability Verification"
+    echo " plinthc Bindist Relocatability Verification"
     echo "============================================"
 
     find_tarball
 
     # Copy tarball to temp location before we potentially clean the build dir
     local tarball_copy
-    tarball_copy="$(mktemp /tmp/kardan-reloctest-tarball-XXXXXX.tar.xz)"
+    tarball_copy="$(mktemp /tmp/plinthc-reloctest-tarball-XXXXXX.tar.xz)"
     cp "$TARBALL" "$tarball_copy"
 
     # Install to both prefixes
@@ -337,8 +337,8 @@ main() {
     if [ "$SKIP_CLEAN_BUILD" -eq 0 ]; then
         echo ""
         echo "=== Cleaning build directory ==="
-        echo "  Running kardan-clean.sh all to remove _build/ ..."
-        "$REPO_ROOT/kardan-clean.sh" all
+        echo "  Running plinthc-clean.sh all to remove _build/ ..."
+        "$REPO_ROOT/plinthc-clean.sh" all
         echo "  Build directory removed."
     else
         echo ""

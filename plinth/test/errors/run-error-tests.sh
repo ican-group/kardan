@@ -4,47 +4,47 @@
 # Note [Error message golden tests]
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Each cases/<Name>.hs uses one Haskell construct that Plinth does not
-# support. This script compiles each case with kardan, expects the
+# support. This script compiles each case with plinthc, expects the
 # compilation to fail, and compares the normalized compiler output with
 # golden/<Name>.stderr.
 #
 # The plutus-tx-plugin golden tests only cover the defer-errors path,
 # which drops the source location and the source snippet. These tests
 # capture the real user-facing output (the "Plinth Compilation Error:"
-# message printed by kardan), so changes to error reporting and to
+# message printed by plinthc), so changes to error reporting and to
 # source-location tracking show up as golden diffs here.
 #
 # Files named *Helper.hs are companion modules, not test cases.
 #
 # Usage:
-#   GHC=/path/to/kardan ./run-error-tests.sh          # run tests
-#   GHC=/path/to/kardan ACCEPT=1 ./run-error-tests.sh # update goldens
+#   GHC=/path/to/plinthc ./run-error-tests.sh          # run tests
+#   GHC=/path/to/plinthc ACCEPT=1 ./run-error-tests.sh # update goldens
 #
 # The package databases come from the plinth/test build tree, so run
-# kardan-test.sh (or at least its build step) first.
+# plinthc-test.sh (or at least its build step) first.
 
 set -uo pipefail
 
 HERE=$(cd "$(dirname "$0")" && pwd)
 TEST_ROOT=$(cd "$HERE/.." && pwd)
 
-: ${GHC:=$TEST_ROOT/../../ghc/_build/stage1/bin/kardan}
+: ${GHC:=$TEST_ROOT/../../ghc/_build/stage1/bin/plinthc}
 : ${ACCEPT:=0}
 
 if [ ! -x "$GHC" ]; then
-  echo "error: kardan not found ($GHC). Run kardan-build.sh first," >&2
-  echo "or set GHC to an installed kardan." >&2
+  echo "error: plinthc not found ($GHC). Run plinthc-build.sh first," >&2
+  echo "or set GHC to an installed plinthc." >&2
   exit 2
 fi
 
 VERSION=$("$GHC" --numeric-version)
-STORE_DB="$TEST_ROOT/_build/store/ghc-$VERSION-kardan/package.db"
+STORE_DB="$TEST_ROOT/_build/store/ghc-$VERSION-plinthc/package.db"
 INPLACE_DB="$TEST_ROOT/_build/build/packagedb/ghc-$VERSION"
 
 for db in "$STORE_DB" "$INPLACE_DB"; do
   if [ ! -d "$db" ]; then
     echo "error: package database not found: $db" >&2
-    echo "Build the plinth/test project first (kardan-test.sh)." >&2
+    echo "Build the plinth/test project first (plinthc-test.sh)." >&2
     exit 2
   fi
 done

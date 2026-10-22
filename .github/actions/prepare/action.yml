@@ -1,7 +1,7 @@
 name: Prepare Linux build environment
 description: >-
   Free disk space, bind-mount the large /mnt disk as _build and ghc/_build, fetch submodules
-  and set up GHC/cabal. Shared by the cabal (build) and kardan-test jobs. The
+  and set up GHC/cabal. Shared by the cabal (build) and plinthc-test jobs. The
   repo must already be checked out so the runner can find this local action.
 
 inputs:
@@ -31,7 +31,7 @@ runs:
       docker-images: true
       swap-storage: true
 
-  # Build on the large /mnt disk: _build (kardan) and ghc/_build (hadrian).
+  # Build on the large /mnt disk: _build (plinthc) and ghc/_build (hadrian).
   # See .github/bind-mount.sh.
   - name: Build on the large /mnt disk
     shell: bash

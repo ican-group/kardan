@@ -57,7 +57,7 @@ source-repository-package
     tag: 211b95baad422966c9e719ed70cbc189c58eaae5
 
 
--- ghc-bin, from the ghc submodule (the kardan branch of the GHC fork).
+-- ghc-bin, from the ghc submodule (the plinthc branch of the GHC fork).
 packages: ../ghc/ghc
 
 optional-packages:
@@ -83,5 +83,5 @@ package sodium-clib
   configure-options: --enable-pie=no
 
 package ghc-bin
-  flags: +kardan +internal-interpreter +threaded
+  flags: +plinthc +internal-interpreter +threaded
   executable-static: False

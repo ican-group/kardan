@@ -1,4 +1,4 @@
--- In kardan, -O0 does not imply -fignore-interface-pragmas.
+-- In plinthc, -O0 does not imply -fignore-interface-pragmas.
 {-# OPTIONS_GHC -O0 #-}
 
 -- Note [No INLINABLE pragmas]
@@ -8,7 +8,7 @@
 -- has no inline pragma of its own, so GHC keeps the unfoldings that the
 -- Plinth compiler needs in the interface files.
 --
--- In kardan, -O0 does not imply -fomit-interface-pragmas and
+-- In plinthc, -O0 does not imply -fomit-interface-pragmas and
 -- -fignore-interface-pragmas (see Note [Keep interface pragmas] in
 -- ghc:GHC.Driver.Session), so -O0 does not remove the unfoldings.
 --

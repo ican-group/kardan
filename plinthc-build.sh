@@ -13,7 +13,7 @@ RELEASE_HADRIAN_ARGS=""
 DEV_HADRIAN_ARGS="--docs=none"
 # expose_unfoldings: base, ghc-prim and ghc-bignum must have the
 # unfoldings of all their definitions, because the Plinth compiler
-# translates them. Kardan does not compile these libraries, so they do
+# translates them. plinthc does not compile these libraries, so they do
 # not get the INLINABLE pragmas that the Plinth plugin adds.
 RELEASE_FLAVOUR="release+expose_unfoldings"
 # Note [Lean CI flavour]
@@ -42,7 +42,7 @@ DEV_CONFIGURE_ARGS="$DEFAULT_CONFIGURE_ARGS"
 
 : ${REBUILD:=0} # set to 1 to force rebuild
 : ${RELEASE:=0} # set to 1 to build release version including documentation (more build dependencies)
-: ${BINDIST:=0} # set to 1 to produce the fixed-up kardan bindist + archive while keeping the dev (assertions) flavour
+: ${BINDIST:=0} # set to 1 to produce the fixed-up plinthc bindist + archive while keeping the dev (assertions) flavour
 : ${RELEASE_VERSION:=} # set to e.g. 9.6.169.1 to stamp the compiler with exactly that version. See Note [Release versioning]
 
 # program locations
@@ -148,7 +148,7 @@ fi
 # They must not be confused, so the value handed to configure is always passed
 # explicitly below and never inherited from the environment.
 #
-# ghc/configure.ac (the kardan branch of the GHC fork) carries the
+# ghc/configure.ac (the plinthc branch of the GHC fork) carries the
 # three-component base (9.6.<plinth>) and a plain build
 # is stamped 9.6.169.<date>. A release build sets RELEASE_VERSION=9.6.169.1: the
 # base is rewritten to that full version and RELEASE=YES keeps configure from
@@ -203,8 +203,8 @@ fi
 
 # hadrian builds in its default build root, ghc/_build: a build root outside
 # the GHC tree does not work (absolute: GHC #27427; relative: the rts does not
-# find its generated headers). The kardan outputs (tools, the cabal build of
-# kardan) stay in _build.
+# find its generated headers). The plinthc outputs (tools, the cabal build of
+# plinthc) stay in _build.
 GHC_BUILD="$BASE/ghc/_build"
 
 if [ ! -x "$GHC_BUILD/stage1/bin/ghc" ] || [ "$REBUILD" -eq 1 ]; then
@@ -213,7 +213,7 @@ if [ ! -x "$GHC_BUILD/stage1/bin/ghc" ] || [ "$REBUILD" -eq 1 ]; then
   (cd ghc && ./hadrian/build -j --flavour=$FLAVOUR $HADRIAN_ARGS binary-dist-dir)
 fi
 
-# build Kardan
+# build plinthc
 
 STAGE="stage-plinth"
 BOOT_GHC="$GHC_BUILD/stage1/bin/ghc"
@@ -255,7 +255,7 @@ if [ "$IS_WINDOWS" -eq 1 ]; then
 fi
 
 (
-    echo "building kardan"
+    echo "building plinthc"
     cd plinth
     echo "cabal update..."
     "$CABAL" ${CABAL_PROJECT_ARGS} ${CABAL_ARGS} update
@@ -263,20 +263,20 @@ fi
     "$CABAL" ${CABAL_PROJECT_ARGS} ${CABAL_ARGS} build ${CABAL_BUILD_ARGS} ghc-bin:exe:ghc
 )
 
-# add kardan to the _build dir and the bindists
+# add plinthc to the _build dir and the bindists
 CWRAPPER_DIR="$BASE/ghc/hadrian/bindist/cwrappers"
 
-DEST_KARDAN="$GHC_BUILD/stage1/bin/kardan${EXE_EXT}"
+DEST_PLINTHC="$GHC_BUILD/stage1/bin/plinthc${EXE_EXT}"
 
 (
     cd plinth
     # list-bin may first print the output of a source-repository-package
     # checkout (e.g. git's "HEAD is now at ...") on stdout: keep the last line.
-    SRC_KARDAN=$("$CABAL" ${CABAL_PROJECT_ARGS} ${CABAL_ARGS} list-bin ${CABAL_BUILD_ARGS} ghc-bin:exe:ghc | tail -n 1)
-    echo "installing kardan: $SRC_KARDAN => $DEST_KARDAN"
+    SRC_PLINTHC=$("$CABAL" ${CABAL_PROJECT_ARGS} ${CABAL_ARGS} list-bin ${CABAL_BUILD_ARGS} ghc-bin:exe:ghc | tail -n 1)
+    echo "installing plinthc: $SRC_PLINTHC => $DEST_PLINTHC"
 
     # add to build dir (needed for testing, so always done)
-    cp "$SRC_KARDAN" "$DEST_KARDAN"
+    cp "$SRC_PLINTHC" "$DEST_PLINTHC"
 
     # The bindist fixup below only matters for the shippable bindist, produced
     # for RELEASE=1 (release flavour + docs) or BINDIST=1 (current flavour, e.g.
@@ -288,32 +288,32 @@ DEST_KARDAN="$GHC_BUILD/stage1/bin/kardan${EXE_EXT}"
     fi
 
     # fixup the bindist:
-    #  - add kardan with the static Plinth plugin
-    #  - remove boot GHC, since we don't want Kardan to replace the user's GHC
+    #  - add plinthc with the static Plinth plugin
+    #  - remove boot GHC, since we don't want plinthc to replace the user's GHC
     for dir in "$GHC_BUILD"/bindist/*; do
         if [ -d "$dir" ]; then
-            echo "adding kardan to bindist: $dir"
+            echo "adding plinthc to bindist: $dir"
             if [ "$IS_WINDOWS" -eq 1 ]; then
                 # Windows: copy versioned .exe and compile a C wrapper
-                cp "$SRC_KARDAN" "$dir/bin/kardan-$VERSION.exe"
+                cp "$SRC_PLINTHC" "$dir/bin/plinthc-$VERSION.exe"
                 "$BOOT_GHC" -no-hs-main \
-                    -o "$dir/bin/kardan.exe" \
+                    -o "$dir/bin/plinthc.exe" \
                     "-I$CWRAPPER_DIR" \
-                    "-DEXE_PATH=\"kardan-$VERSION.exe\"" \
+                    "-DEXE_PATH=\"plinthc-$VERSION.exe\"" \
                     "-DINTERACTIVE_PROCESS=0" \
                     "$CWRAPPER_DIR/version-wrapper.c" \
                     "$CWRAPPER_DIR/getLocation.c" \
                     "$CWRAPPER_DIR/cwrapper.c"
             else
                 # Unix: copy versioned binary and symlink
-                cp "$SRC_KARDAN" "$dir/bin/kardan-$VERSION"
-                ( cd "$dir/bin" && ln -sf "kardan-$VERSION" "kardan" )
+                cp "$SRC_PLINTHC" "$dir/bin/plinthc-$VERSION"
+                ( cd "$dir/bin" && ln -sf "plinthc-$VERSION" "plinthc" )
             fi
 
-            # Add wrapper scripts so `make install` creates $PREFIX/bin/kardan
+            # Add wrapper scripts so `make install` creates $PREFIX/bin/plinthc
             mkdir -p "$dir/wrappers"
-            echo 'exec "$executablename" -B"$libdir" ${1+"$@"}' > "$dir/wrappers/kardan-$VERSION"
-            ( cd "$dir/wrappers" && ln -sf "kardan-$VERSION" "kardan" )
+            echo 'exec "$executablename" -B"$libdir" ${1+"$@"}' > "$dir/wrappers/plinthc-$VERSION"
+            ( cd "$dir/wrappers" && ln -sf "plinthc-$VERSION" "plinthc" )
 
             # remove the boot GHC from the bindist
             rm -f "$dir"/bin/ghc
@@ -321,8 +321,8 @@ DEST_KARDAN="$GHC_BUILD/stage1/bin/kardan${EXE_EXT}"
             rm -f "$dir"/bin/ghc-$VERSION
             rm -f "$dir"/bin/ghc-$VERSION.exe
             # rename runhaskell/runghc
-            mv -f "$dir"/bin/runhaskell "$dir"/bin/kardan-runhaskell 2>/dev/null || true
-            mv -f "$dir"/bin/runghc "$dir"/bin/kardan-runghc 2>/dev/null || true
+            mv -f "$dir"/bin/runhaskell "$dir"/bin/plinthc-runhaskell 2>/dev/null || true
+            mv -f "$dir"/bin/runghc "$dir"/bin/plinthc-runghc 2>/dev/null || true
             # XXX wrappers on Windows, other tools like unlit need to be renamed?
         fi
     done
@@ -339,7 +339,7 @@ DEST_KARDAN="$GHC_BUILD/stage1/bin/kardan${EXE_EXT}"
 # A missing -musl suffix is not cosmetic: generate-ghcup-metadata.py derives the
 # ghcup platform from the bindist name, so the musl bindist was published as
 # Linux_UnknownLinux. ghcup deliberately does not fall back from Alpine to
-# UnknownLinux (a glibc bindist cannot run on musl), so `ghcup install kardan`
+# UnknownLinux (a glibc bindist cannot run on musl), so `ghcup install plinthc`
 # failed on Alpine with "Unable to find a download". The two bindists would also
 # collide under the same file name in the GitHub Release.
 #
@@ -364,13 +364,13 @@ if [ "$RELEASE" -eq 1 ] || [ "$BINDIST" -eq 1 ]; then
             ;;
     esac
     # hadrian's binary-dist-dir names the directory ghc-<ver>-<platform>, so
-    # rename it to kardan-<ver>-<platform>[-musl] rather than just naming the
+    # rename it to plinthc-<ver>-<platform>[-musl] rather than just naming the
     # archive: the tarball's top-level directory has to match the archive name,
     # since that is what generate-ghcup-metadata.py records as ghcup's dlSubdir.
     # Guarded on the source existing so re-running over an already-renamed
     # bindist keeps it instead of deleting it.
     HADRIAN_BINDIST="ghc-$VERSION-$TARGET_PLATFORM"
-    BINDIST_NAME="kardan-$VERSION-$TARGET_PLATFORM${LIBC_SUFFIX}"
+    BINDIST_NAME="plinthc-$VERSION-$TARGET_PLATFORM${LIBC_SUFFIX}"
     if [ -d "$GHC_BUILD/bindist/$HADRIAN_BINDIST" ]; then
         rm -rf "$GHC_BUILD/bindist/$BINDIST_NAME"
         mv "$GHC_BUILD/bindist/$HADRIAN_BINDIST" "$GHC_BUILD/bindist/$BINDIST_NAME"

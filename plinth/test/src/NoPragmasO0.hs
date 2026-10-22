@@ -1,5 +1,5 @@
 {-# LANGUAGE NoImplicitPrelude #-}
--- In kardan, -O0 does not imply -fomit-interface-pragmas.
+-- In plinthc, -O0 does not imply -fomit-interface-pragmas.
 {-# OPTIONS_GHC -O0 #-}
 -- On-chain helper without INLINABLE pragma, compiled with -O0.
 -- See Note [No INLINABLE pragmas] in no-pragmas/Main.hs.
