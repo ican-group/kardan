@@ -1,7 +1,7 @@
 # Example projects
 
 Working copies of the projects built in the website tutorials
-(https://ican-group.github.io/ghc-plinth/tutorials/). Keep each project's
+(https://ican-group.github.io/plinthc/tutorials/). Keep each project's
 files byte-identical to the code blocks of its tutorial page.
 
 - `add/`: "Your first smart contract with Plinth". Compiles an addition
@@ -11,7 +11,7 @@ files byte-identical to the code blocks of its tutorial page.
   (`lock.plutus`), used against a Yaci DevKit devnet.
 - `lock-ghci/`: "Lock and unlock funds from GHCi". Off-chain cardano-api
   helpers to use the lock validator interactively. Builds with a standard
-  GHC 9.6.7, not with uplc-ghc; reads the `lock.plutus` that `lock/` wrote.
+  GHC 9.6.7, not with plinthc; reads the `lock.plutus` that `lock/` wrote.
 - `lock-ghci-exp/`: "Lock and unlock funds with the experimental
   cardano-api". The same helpers as `lock-ghci/`, rebuilt on
   Cardano.Api.Experimental.
@@ -22,9 +22,9 @@ files byte-identical to the code blocks of its tutorial page.
   wallets. Builds with a standard GHC 9.6.7; reads the `auction.plutus` that
   `auction/` wrote.
 
-`add/`, `lock/` and `auction/` build with the uplc-ghc release named in their
+`add/`, `lock/` and `auction/` build with the plinthc release named in their
 `cabal.project` (`with-compiler`). Install it with
-`ghcup install plinth <version>`. The `ghc-plinth-plutus` tag in the same
+`ghcup install plinthc <version>`. The `ghc-plinth-plutus` tag in the same
 file is the commit that this release is built from: change the two
 together.
 

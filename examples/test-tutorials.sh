@@ -2,7 +2,7 @@
 # Test the tutorial example projects, as CI does. Stages:
 #
 #   onchain        build examples/add, examples/lock and examples/auction
-#                  with uplc-ghc and check the files they write
+#                  with plinthc and check the files they write
 #   offchain-build build examples/lock-ghci, examples/lock-ghci-exp and
 #                  examples/auction-ghci with a standard GHC
 #   e2e            run the GHCi sessions against a Yaci DevKit devnet:
@@ -12,10 +12,10 @@
 # Usage: test-tutorials.sh [onchain|offchain-build|e2e]...
 # With no argument, run all stages.
 #        test-tutorials.sh version
-# Print the uplc-ghc release that the on-chain projects name in
+# Print the plinthc release that the on-chain projects name in
 # with-compiler.
 #
-# onchain needs that release (ghcup install plinth <version>). JOBS=n
+# onchain needs that release (ghcup install plinthc <version>). JOBS=n
 # limits cabal to n parallel package builds (default: one per CPU).
 # offchain-build needs the GHC named in examples/lock-ghci/cabal.project
 # and the system LMDB and liburing libraries (liblmdb-dev and
@@ -30,14 +30,14 @@ DEVKIT_DIR="$HOME/.yaci-devkit"
 
 log() { printf '\n=== %s\n' "$*"; }
 
-# The uplc-ghc release of the on-chain projects (with-compiler:
-# uplc-ghc-<version>). Fail if they do not all name the same one.
+# The plinthc release of the on-chain projects (with-compiler:
+# plinthc-<version>). Fail if they do not all name the same one.
 plinth_version() {
   local p v first=
   for p in add lock auction; do
-    v=$(sed -n 's/^with-compiler: *uplc-ghc-//p' "$EXAMPLES_DIR/$p/cabal.project")
+    v=$(sed -n 's/^with-compiler: *plinthc-//p' "$EXAMPLES_DIR/$p/cabal.project")
     if [ -z "$v" ] || { [ -n "$first" ] && [ "$v" != "$first" ]; }; then
-      echo "error: add/, lock/ and auction/ must name the same uplc-ghc" \
+      echo "error: add/, lock/ and auction/ must name the same plinthc" \
            "release ($p/ names '$v')" >&2
       return 1
     fi
