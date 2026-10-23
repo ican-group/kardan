@@ -320,13 +320,15 @@ DEST_PLINTHC="$GHC_BUILD/stage1/bin/plinthc${EXE_EXT}"
         if [ -d "$dir" ]; then
             echo "adding plinthc to bindist: $dir"
             if [ "$IS_WINDOWS" -eq 1 ]; then
-                # Windows: copy versioned .exe and compile a C wrapper
+                # Windows: copy versioned .exe and compile a C wrapper. The
+                # defines go through -optc, as in hadrian: GHC 9.12 no longer
+                # passes -D to the C compiler.
                 cp "$SRC_PLINTHC" "$dir/bin/plinthc-$VERSION.exe"
                 "$BOOT_GHC" -no-hs-main \
                     -o "$dir/bin/plinthc.exe" \
                     "-I$CWRAPPER_DIR" \
-                    "-DEXE_PATH=\"plinthc-$VERSION.exe\"" \
-                    "-DINTERACTIVE_PROCESS=0" \
+                    "-optc-DEXE_PATH=\"plinthc-$VERSION.exe\"" \
+                    "-optc-DINTERACTIVE_PROCESS=0" \
                     "$CWRAPPER_DIR/version-wrapper.c" \
                     "$CWRAPPER_DIR/getLocation.c" \
                     "$CWRAPPER_DIR/cwrapper.c"
