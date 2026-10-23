@@ -418,6 +418,10 @@ if [ "$RELEASE" -eq 1 ] || [ "$BINDIST" -eq 1 ]; then
         rm -rf "${BINDIST_ROOT:?}/$BINDIST_NAME"
         mv "$BINDIST_ROOT/$HADRIAN_BINDIST" "$BINDIST_ROOT/$BINDIST_NAME"
     fi
-    (cd "$BINDIST_ROOT" && "$TAR" -cf - "$BINDIST_NAME" | "$XZ" -T0 > "$BINDIST_NAME.tar.xz")
+    # The archive always goes to $GHC_BUILD/bindist, where CI collects it, even
+    # when the tree is the relocatable one. See Note [Relocatable bindist on
+    # Windows].
+    mkdir -p "$GHC_BUILD/bindist"
+    (cd "$BINDIST_ROOT" && "$TAR" -cf - "$BINDIST_NAME" | "$XZ" -T0 > "$GHC_BUILD/bindist/$BINDIST_NAME.tar.xz")
 fi
 
