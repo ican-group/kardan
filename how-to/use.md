@@ -9,8 +9,8 @@ The recommended way to use plinthc is to set it once in
 `plinthc-<version>`. Name the release in `cabal.project`:
 
 ```haskell
-with-compiler: plinthc-9.6.169.4
-with-hc-pkg:   plinthc-pkg-9.6.169.4
+with-compiler: plinthc-9.6.170.1
+with-hc-pkg:   plinthc-pkg-9.6.170.1
 packages: .
 ```
 
@@ -65,14 +65,14 @@ is not needed: the compiler is built into `plinthc`):
 source-repository-package
   type: git
   location: https://github.com/ican-group/ghc-plinth-plutus
-  tag: 6b85da890a3e34cd9fe0e5e7c5a43d0801144634
+  tag: 1a74ed2d09f333ac516a0e49328cd62053ff4c9d
   subdir: plutus-tx
           plutus-core
 ```
 
 Use the `ghc-plinth-plutus` commit that matches your `plinthc`: the compiler
 and these libraries are released together as a matched set, built from the same
-commit. The commit above matches release 9.6.169.4, the release in
+commit. The commit above matches release 9.6.170.1, the release in
 `with-compiler`. To use a different release, change `with-compiler`,
 `with-hc-pkg` and this `tag` together. The commit of a release is the `plutus`
 submodule of its tag (`v<version>`) in

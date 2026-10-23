@@ -24,7 +24,7 @@ upstream release plus a small set of patches: GHC
 ([`ican-group/ghc-plinth`](https://github.com/ican-group/ghc-plinth), branch
 `plinthc-9.6.7`) and plutus
 ([`ican-group/ghc-plinth-plutus`](https://github.com/ican-group/ghc-plinth-plutus),
-branch `plinthc-1.69`), which supplies `plutus-tx`, `plutus-tx-plugin` and
+branch `plinthc-1.70`), which supplies `plutus-tx`, `plutus-tx-plugin` and
 `plutus-core`.
 
 ## Why a standalone compiler

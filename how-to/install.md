@@ -17,8 +17,8 @@ release channel, then install and activate the tool:
 
 ```console
 $ ghcup config add-release-channel https://raw.githubusercontent.com/ican-group/plinthc/ghcup-channel/ghcup-plinthc.yaml
-$ ghcup install plinthc 9.6.169.4
-$ ghcup set plinthc 9.6.169.4
+$ ghcup install plinthc 9.6.170.1
+$ ghcup set plinthc 9.6.170.1
 ```
 
 `ghcup install` downloads the binary distribution for your platform and

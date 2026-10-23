@@ -34,7 +34,7 @@ The compiler sources come from two submodules, so clone recursively:
 | Submodule | Repository                     | Branch          | Provides                                               |
 | --------- | ------------------------------ | --------------- | ------------------------------------------------------ |
 | `ghc`     | `ican-group/ghc-plinth`        | `plinthc-9.6.7` | GHC 9.6.7 with the plinthc patches                     |
-| `plutus`  | `ican-group/ghc-plinth-plutus` | `plinthc-1.69`  | `plutus-tx`, `plutus-tx-plugin` and `plutus-core` 1.69 |
+| `plutus`  | `ican-group/ghc-plinth-plutus` | `plinthc-1.70`  | `plutus-tx`, `plutus-tx-plugin` and `plutus-core` 1.70 |
 
 
 ```console
