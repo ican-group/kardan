@@ -184,7 +184,7 @@ def install_spec(ghcup_platform):
         # Windows GHC bindists are copy-relocatable: no configure/make.
         return {
             "exeRules": [{"installPattern": ["bin/**"]}],
-            "dataRules": [{"installPattern": ["doc/**", "lib/**", "man/**", "mingw/**"]}],
+            "dataRules": [{"installPattern": ["doc/**", "lib/**", "man/**", "mingw/**", "share/**"]}],
             "exeSymLinked": exe_symlinked,
             "preserveMtimes": True,
         }
