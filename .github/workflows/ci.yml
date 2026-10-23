@@ -428,7 +428,11 @@ jobs:
         # key by GHC so this never collides with another job's artifact within a
         # run. See the matching download in the plinthc-test-windows job.
         name: plinthc-bindist-windows-${{ matrix.ghc }}
-        path: ghc/_build/bindist/*.tar.xz
+        # reloc-bindist since GHC 9.10. See Note [Relocatable bindist on
+        # Windows] in plinthc-build.sh.
+        path: |
+          ghc/_build/bindist/*.tar.xz
+          ghc/_build/reloc-bindist/*.tar.xz
         retention-days: 1
         # the archive is already xz-compressed; don't re-zip it
         compression-level: 0

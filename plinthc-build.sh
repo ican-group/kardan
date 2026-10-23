@@ -222,10 +222,25 @@ fi
 # plinthc) stay in _build.
 GHC_BUILD="$BASE/ghc/_build"
 
+# Note [Relocatable bindist on Windows]
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# A Windows bindist is used without running its configure script, so its
+# lib/settings must name the bundled mingw toolchain relative to $tooldir. With
+# GHC 9.6, binary-dist-dir does that. Since GHC 9.10, it writes the absolute
+# paths of the build tree; only reloc-binary-dist-dir (binary-dist-dir, then a
+# relocatable install into _build/reloc-bindist) writes $tooldir paths. Use it
+# on Windows when hadrian has it.
+HADRIAN_BINDIST_TARGET=binary-dist-dir
+BINDIST_ROOT="$GHC_BUILD/bindist"
+if [ "$IS_WINDOWS" -eq 1 ] && grep -q '"reloc-binary-dist-dir"' ghc/hadrian/src/Rules/BinaryDist.hs; then
+  HADRIAN_BINDIST_TARGET=reloc-binary-dist-dir
+  BINDIST_ROOT="$GHC_BUILD/reloc-bindist"
+fi
+
 if [ ! -x "$GHC_BUILD/stage1/bin/ghc" ] || [ "$REBUILD" -eq 1 ] || [ "$GHC_CHANGED" -eq 1 ]; then
   echo "building..."
-  echo "(cd ghc && ./hadrian/build -j --flavour=$FLAVOUR $HADRIAN_ARGS binary-dist-dir)"
-  (cd ghc && ./hadrian/build -j --flavour=$FLAVOUR $HADRIAN_ARGS binary-dist-dir)
+  echo "(cd ghc && ./hadrian/build -j --flavour=$FLAVOUR $HADRIAN_ARGS $HADRIAN_BINDIST_TARGET)"
+  (cd ghc && ./hadrian/build -j --flavour=$FLAVOUR $HADRIAN_ARGS $HADRIAN_BINDIST_TARGET)
   # See Note [Rebuild when the GHC fork changes]
   mkdir -p "$BASE/_build"
   echo "$GHC_COMMIT" > "$GHC_STAMP"
@@ -316,7 +331,7 @@ DEST_PLINTHC="$GHC_BUILD/stage1/bin/plinthc${EXE_EXT}"
     # fixup the bindist:
     #  - add plinthc with the static Plinth plugin
     #  - remove boot GHC, since we don't want plinthc to replace the user's GHC
-    for dir in "$GHC_BUILD"/bindist/*; do
+    for dir in "$BINDIST_ROOT"/*; do
         if [ -d "$dir" ]; then
             echo "adding plinthc to bindist: $dir"
             if [ "$IS_WINDOWS" -eq 1 ]; then
@@ -399,10 +414,10 @@ if [ "$RELEASE" -eq 1 ] || [ "$BINDIST" -eq 1 ]; then
     # bindist keeps it instead of deleting it.
     HADRIAN_BINDIST="ghc-$VERSION-$TARGET_PLATFORM"
     BINDIST_NAME="plinthc-$VERSION-$TARGET_PLATFORM${LIBC_SUFFIX}"
-    if [ -d "$GHC_BUILD/bindist/$HADRIAN_BINDIST" ]; then
-        rm -rf "$GHC_BUILD/bindist/$BINDIST_NAME"
-        mv "$GHC_BUILD/bindist/$HADRIAN_BINDIST" "$GHC_BUILD/bindist/$BINDIST_NAME"
+    if [ -d "$BINDIST_ROOT/$HADRIAN_BINDIST" ]; then
+        rm -rf "${BINDIST_ROOT:?}/$BINDIST_NAME"
+        mv "$BINDIST_ROOT/$HADRIAN_BINDIST" "$BINDIST_ROOT/$BINDIST_NAME"
     fi
-    (cd "$GHC_BUILD/bindist" && "$TAR" -cf - "$BINDIST_NAME" | "$XZ" -T0 > "$BINDIST_NAME.tar.xz")
+    (cd "$BINDIST_ROOT" && "$TAR" -cf - "$BINDIST_NAME" | "$XZ" -T0 > "$BINDIST_NAME.tar.xz")
 fi
 
